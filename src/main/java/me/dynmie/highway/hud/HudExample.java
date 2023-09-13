@@ -1,17 +1,9 @@
 package me.dynmie.highway.hud;
 
 import me.dynmie.highway.HighwayAddon;
-import me.dynmie.highway.highwaytools.block.BlockTask;
-import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.render.color.Color;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.StringJoiner;
 
 public class HudExample extends HudElement {
     public static final HudElementInfo<HudExample> INFO = new HudElementInfo<>(HighwayAddon.HUD_GROUP, "highwaydebug", "HUD element example.", HudExample::new);

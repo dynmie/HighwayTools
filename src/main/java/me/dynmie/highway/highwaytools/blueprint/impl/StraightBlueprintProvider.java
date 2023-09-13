@@ -1,11 +1,9 @@
 package me.dynmie.highway.highwaytools.blueprint.impl;
 
-import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintProvider;
-import me.dynmie.highway.utils.HighwayUtils;
+import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.misc.MBlockPos;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

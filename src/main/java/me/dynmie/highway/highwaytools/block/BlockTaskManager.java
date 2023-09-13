@@ -5,7 +5,6 @@ import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.HighwayUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;

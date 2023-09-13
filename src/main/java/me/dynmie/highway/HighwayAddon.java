@@ -7,7 +7,7 @@ import me.dynmie.highway.highwaytools.pathing.BaritoneProcess;
 import me.dynmie.highway.hud.HudExample;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.systems.commands.Commands;
+import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
@@ -33,7 +33,7 @@ public class HighwayAddon extends MeteorAddon {
         BaritoneAPI.getProvider().getPrimaryBaritone().getPathingControlManager().registerProcess(new BaritoneProcess(tools));
 
         // Commands
-        Commands.get().add(new CommandExample());
+        Commands.add(new CommandExample());
 
         // HUD
         Hud.get().register(HudExample.INFO);
