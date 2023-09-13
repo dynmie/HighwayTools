@@ -1,8 +1,12 @@
-# Meteor Addon Template
+# MetroHighwayTools
 
-A template to allow easy usage of the Meteor Addon API.
+A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s highway tools, with inspiration from [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
 
-### How to use:  
-- Clone this project
-- Use this template to create new modules/commands
-- Run the mod with Meteor.
+### About
+An attempt to add a fully automated highway building tool to Meteor client. Created because the current highway tools is terrible.
+
+### Warning
+This addon is not finished! There are bugs, and they are very big. Use at your own risk.
+
+### Contributing
+If you would like to contribute, create a pull request!
