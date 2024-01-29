@@ -9,6 +9,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
@@ -65,7 +68,8 @@ public class TaskExecutor {
 
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
         if (HighwayUtils.isTypeAir(targetBlock)) {
-//            tools.info("air broken");
+            BlockSoundGroup soundGroup = targetBlock.getDefaultState().getSoundGroup();
+            mc.player.playSound(soundGroup.getBreakSound(), SoundCategory.BLOCKS, soundGroup.getVolume(), soundGroup.getPitch());
             task.updateState(TaskState.DONE);
         } else {
             tools.setBlocksBroken(tools.getBlocksBroken() + 1);

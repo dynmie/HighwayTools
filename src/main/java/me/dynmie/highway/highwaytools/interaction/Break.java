@@ -17,8 +17,6 @@ public class Break {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    private static BlockPos currentlyMining = BlockPos.ORIGIN;
-
     public static void mine(BlockTask task) {
         BlockPos pos = task.getBlockPos();
         BlockState blockState = mc.world.getBlockState(pos);
