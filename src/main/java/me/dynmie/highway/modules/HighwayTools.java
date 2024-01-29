@@ -18,7 +18,6 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.player.AutoEat;
 import meteordevelopment.meteorclient.systems.modules.player.AutoGap;
 import meteordevelopment.meteorclient.utils.misc.HorizontalDirection;
-import meteordevelopment.meteorclient.utils.misc.MBlockPos;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -272,17 +271,15 @@ public class HighwayTools extends Module {
         .build()
     );
 
-    private HorizontalDirection dir;
-    private HorizontalDirection leftDir;
-    private HorizontalDirection rightDir;
+    private HorizontalDirection direction = HorizontalDirection.North;
 
-    private MBlockPos position;
-    private MBlockPos startPosition;
+    private BlockPos currentPosition = new BlockPos(0, 64, 0);
+    private BlockPos startPosition = new BlockPos(0, 64, 0);;
 
-    public Vec3d start;
-    public int blocksBroken;
-    public int blocksPlaced;
-    private boolean displayInfo;
+    public Vec3d start = new Vec3d(0d, 64d, 0d);
+    public int blocksBroken = 0;
+    public int blocksPlaced = 0;
+    private boolean displayInfo = true;
 
     private final BaritoneHelper baritoneHelper = new BaritoneHelper(this);
     private final BaritonePathfinder pathfinder = new BaritonePathfinder(this);
@@ -299,13 +296,11 @@ public class HighwayTools extends Module {
         baritoneHelper.setupBaritone();
         blockTaskManager.clearTasks();
 
-        dir = HorizontalDirection.get(mc.player.getYaw());
-        leftDir = dir.rotateLeftSkipOne();
-        rightDir = leftDir.opposite();
+        direction = HorizontalDirection.get(mc.player.getYaw());
 
         start = mc.player.getPos();
-        startPosition = new MBlockPos(mc.player);
-        position = new MBlockPos(mc.player);
+        startPosition = mc.player.getBlockPos();
+        currentPosition = mc.player.getBlockPos();
 
         blocksBroken = 0;
         blocksPlaced = 0;
@@ -409,7 +404,13 @@ public class HighwayTools extends Module {
         // DEBUG
         if (renderGeneratedBlueprint.get()) {
             for (Map.Entry<BlockPos, BlueprintTask> entry : blueprintGenerator.getBlueprint().entrySet()) {
-                event.renderer.box(entry.getKey(), new Color(0, 0, 255, 10), new Color(0, 0, 255, 91), ShapeMode.Both, 0);
+                event.renderer.box(
+                    entry.getKey(),
+                    new Color(0, 0, 255, 10),
+                    new Color(0, 0, 255, 91),
+                    ShapeMode.Both,
+                    0
+                );
             }
         }
     }
@@ -529,23 +530,27 @@ public class HighwayTools extends Module {
         return renderPlaceLineColor;
     }
 
-    public HorizontalDirection getDir() {
-        return dir;
+    public HorizontalDirection getDirection() {
+        return direction;
     }
 
-    public HorizontalDirection getLeftDir() {
-        return leftDir;
+    public HorizontalDirection getLeftDirection() {
+        return direction.rotateLeftSkipOne();
     }
 
-    public HorizontalDirection getRightDir() {
-        return rightDir;
+    public HorizontalDirection getRightDirection() {
+        return getLeftDirection().opposite();
     }
 
-    public MBlockPos getPosition() {
-        return position;
+    public BlockPos getCurrentPosition() {
+        return currentPosition;
     }
 
-    public MBlockPos getStartPosition() {
+    public void setCurrentPosition(BlockPos currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public BlockPos getStartPosition() {
         return startPosition;
     }
 

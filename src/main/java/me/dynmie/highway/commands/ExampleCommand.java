@@ -10,9 +10,10 @@ import net.minecraft.command.CommandSource;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
-public class CommandExample extends Command {
-    public CommandExample() {
-        super("example", "Sends a message.");
+public class ExampleCommand extends Command {
+
+    public ExampleCommand() {
+        super("checkblocks", "Sends a message.");
     }
 
     @Override
@@ -24,4 +25,5 @@ public class CommandExample extends Command {
             return SINGLE_SUCCESS;
         });
     }
+
 }

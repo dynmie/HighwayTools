@@ -22,6 +22,8 @@ public class BlockTask {
     //
     private int ranTicks = 0;
     private int shuffle = 0;
+    private int stuckTicks = 0;
+    private int minedTicks = 0;
     private boolean isOpen = false;
     private ItemStack toolToUse = ItemStack.EMPTY;
 
@@ -46,7 +48,35 @@ public class BlockTask {
     public void updateState(TaskState state) {
         if (state == taskState) return;
         ranTicks = 0;
+        stuckTicks = 0;
         taskState = state;
+    }
+
+    public void onTick() {
+        ranTicks++;
+        if (ranTicks > taskState.getStuckThreshold()) {
+            stuckTicks++;
+        }
+    }
+
+    public int getStuckTicks() {
+        return stuckTicks;
+    }
+
+    public int getMinedTicks() {
+        return minedTicks;
+    }
+
+    public void setStuckTicks(int stuckTicks) {
+        this.stuckTicks = stuckTicks;
+    }
+
+    public void setMinedTicks(int minedTicks) {
+        this.minedTicks = minedTicks;
+    }
+
+    public void incrementMinedTicks() {
+        minedTicks++;
     }
 
     public void shuffle() {

@@ -3,17 +3,13 @@ package me.dynmie.highway.highwaytools.blueprint.impl;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintProvider;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.misc.MBlockPos;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StraightBlueprintProvider implements BlueprintProvider {
-    private final MinecraftClient mc = MinecraftClient.getInstance();
-
-    private final MBlockPos rootPos = new MBlockPos();
-    private final MBlockPos pos2 = new MBlockPos();
 
     private final HighwayTools tools;
 
@@ -22,15 +18,16 @@ public class StraightBlueprintProvider implements BlueprintProvider {
     }
 
     @Override
-    public @NotNull List<MBlockPos> getFront(MBlockPos basePosition) {
+    public @NotNull List<BlockPos> getFront(BlockPos basePosition) {
 
         int width = tools.getWidth().get();
         int height = tools.getHeight().get();
 
-        rootPos.set(basePosition)
-            .offset(tools.getLeftDir(), tools.getWidthLeftOffset());
+        MBlockPos rootPos = new MBlockPos()
+            .set(basePosition.getX(), basePosition.getY(), basePosition.getZ())
+            .offset(tools.getLeftDirection(), tools.getWidthLeftOffset());
 
-        List<MBlockPos> ret = new ArrayList<>();
+        List<BlockPos> ret = new ArrayList<>();
 
         // loop through all positions by offset from root position
         for (int w = 0; w < width; w++) {
@@ -38,9 +35,9 @@ public class StraightBlueprintProvider implements BlueprintProvider {
                 MBlockPos pos = new MBlockPos()
                     .set(rootPos)
                     .add(0, h, 0)
-                    .offset(tools.getRightDir(), w);
+                    .offset(tools.getRightDirection(), w);
 
-                ret.add(pos);
+                ret.add(new BlockPos(pos.x, pos.y, pos.z));
             }
         }
 
@@ -48,73 +45,76 @@ public class StraightBlueprintProvider implements BlueprintProvider {
     }
 
     @Override
-    public @NotNull List<MBlockPos> getFloor(MBlockPos basePosition) {
+    public @NotNull List<BlockPos> getFloor(BlockPos basePosition) {
 
         int width = tools.getWidth().get();
 
-        rootPos.set(basePosition)
-            .offset(tools.getLeftDir(), tools.getWidthLeftOffset())
+        MBlockPos rootPos = new MBlockPos()
+            .set(basePosition.getX(), basePosition.getY(), basePosition.getZ())
+            .offset(tools.getLeftDirection(), tools.getWidthLeftOffset())
             .add(0, -1, 0);
 
-        List<MBlockPos> ret = new ArrayList<>();
+        List<BlockPos> ret = new ArrayList<>();
 
         for (int w = 0; w < width; w++) {
             MBlockPos pos = new MBlockPos()
                 .set(rootPos)
-                .offset(tools.getRightDir(), w);
+                .offset(tools.getRightDirection(), w);
 
-            ret.add(pos);
+            ret.add(new BlockPos(pos.x, pos.y, pos.z));
         }
 
         return ret;
     }
 
     @Override
-    public @NotNull List<MBlockPos> getRailings(MBlockPos basePosition) {
+    public @NotNull List<BlockPos> getRailings(BlockPos basePosition) {
 
-        rootPos.set(basePosition);
+        MBlockPos rootPos = new MBlockPos()
+            .set(basePosition.getX(), basePosition.getY(), basePosition.getZ());
 
-        List<MBlockPos> ret = new ArrayList<>();
+        List<BlockPos> ret = new ArrayList<>();
 
         MBlockPos leftRailing = new MBlockPos()
             .set(rootPos)
-            .offset(tools.getLeftDir(), tools.getWidthLeftOffset() + 1);
+            .offset(tools.getLeftDirection(), tools.getWidthLeftOffset() + 1);
 
-        ret.add(leftRailing);
+        ret.add(new BlockPos(leftRailing.x, leftRailing.y, leftRailing.z));
 
         MBlockPos rightRailing = new MBlockPos()
             .set(rootPos)
-            .offset(tools.getRightDir(), tools.getWidthRightOffset() + 1);
+            .offset(tools.getRightDirection(), tools.getWidthRightOffset() + 1);
 
-        ret.add(rightRailing);
+        ret.add(new BlockPos(rightRailing.x, rightRailing.y, rightRailing.z));
 
         return ret;
     }
 
     @Override
-    public @NotNull List<MBlockPos> getAboveRailings(MBlockPos basePosition) {
+    public @NotNull List<BlockPos> getAboveRailings(BlockPos basePosition) {
 
         int height = tools.getHeight().get() - 1;
 
-        rootPos.set(basePosition)
+        MBlockPos rootPos = new MBlockPos()
+            .set(basePosition.getX(), basePosition.getY(), basePosition.getZ())
             .add(0, 1, 0);
 
-        List<MBlockPos> ret = new ArrayList<>();
+        List<BlockPos> ret = new ArrayList<>();
 
         for (int h = 0; h < height; h++) {
             MBlockPos leftRailing = new MBlockPos()
                 .set(rootPos)
                 .add(0, h, 0)
-                .offset(tools.getLeftDir(), tools.getWidthLeftOffset() + 1);
+                .offset(tools.getLeftDirection(), tools.getWidthLeftOffset() + 1);
 
-            ret.add(leftRailing);
+            ret.add(new BlockPos(leftRailing.x, leftRailing.y, leftRailing.z));
 
             MBlockPos rightRailing = new MBlockPos()
                 .set(rootPos)
                 .add(0, h, 0)
-                .offset(tools.getRightDir(), tools.getWidthRightOffset() + 1);
+                .offset(tools.getRightDirection(), tools.getWidthRightOffset() + 1);
 
-            ret.add(rightRailing);
+            ret.add(new BlockPos(rightRailing.x, rightRailing.y, rightRailing.z));
         }
 
         return ret;

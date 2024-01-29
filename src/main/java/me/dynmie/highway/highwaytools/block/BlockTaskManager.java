@@ -4,7 +4,9 @@ import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.HighwayUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -41,7 +43,7 @@ public class BlockTaskManager {
         for (Map.Entry<BlockPos, BlockTask> entry : blockTasks.entrySet()) {
             if (entry.getValue().getTaskState() != TaskState.DONE) continue;
 
-            if (tools.getPosition().getMcPos().toCenterPos().distanceTo(entry.getKey().toCenterPos()) > tools.getReach().get() + 2) {
+            if (tools.getCurrentPosition().toCenterPos().distanceTo(entry.getKey().toCenterPos()) > tools.getReach().get() + 2) {
                 blockTasks.remove(entry.getKey());
             }
         }
@@ -51,15 +53,22 @@ public class BlockTaskManager {
     public void generateTask(BlockPos pos, BlueprintTask blueprintTask) {
         if (mc.player == null) return;
         Vec3d eyePos = mc.player.getEyePos();
-        BlockState blockState = mc.player.world.getBlockState(pos);
+        BlockState blockState = mc.player.getWorld().getBlockState(pos);
+        Block currentBlock = blockState.getBlock();
 
         // padding
-        if (HighwayUtils.isBehind(tools.getStartPosition().getMcPos(), pos, tools.getDir())) {
+        if (HighwayUtils.isBehind(tools.getStartPosition(), pos, tools.getDirection())) {
             return;
         }
 
 
         if (eyePos.distanceTo(pos.toCenterPos()) >= tools.getReach().get() + 1) return;
+
+        if (currentBlock.equals(Blocks.END_PORTAL_FRAME) || currentBlock.equals(Blocks.BEDROCK) || currentBlock.equals(Blocks.NETHER_PORTAL) || currentBlock.equals(Blocks.END_PORTAL)) {
+            BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
+            addTask(task);
+            return;
+        }
 
         // place
         if (blockState.isReplaceable() && !HighwayUtils.isTypeAir(blueprintTask.getTargetBlock())) {
@@ -82,17 +91,17 @@ public class BlockTaskManager {
         }
 
         //
-//        if (blockState.isAir() && HighwayUtils.isTypeAir(blueprintTask.getTargetBlock())) {
-//            BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
-//            addTask(task);
-//            return;
-//        }
-//
-//        if (blockState.getBlock().equals(blueprintTask.getTargetBlock())) {
-//            BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
-//            addTask(task);
-//            return;
-//        }
+        if (blockState.isAir() && HighwayUtils.isTypeAir(blueprintTask.getTargetBlock())) {
+            BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
+            addTask(task);
+            return;
+        }
+
+        if (blockState.getBlock().equals(blueprintTask.getTargetBlock())) {
+            BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
+            addTask(task);
+            return;
+        }
         //
 
         BlockTask task = new BlockTask(pos, TaskState.BREAK, blueprintTask);

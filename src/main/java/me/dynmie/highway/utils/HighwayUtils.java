@@ -25,15 +25,6 @@ public class HighwayUtils {
     }
 
     public static boolean isBehind(BlockPos origin, BlockPos check, HorizontalDirection direction) {
-
-//        double dotProduct = origin.toCenterPos().dotProduct(check.toCenterPos());
-//
-//        double idk = Math.cos(direction.yaw) * dotProduct;
-//
-//        // if funny number is not above zero then in front lol
-//        return !(idk > 0);
-////        return idk > 0;
-
         Vec3d oToCDir = origin.toCenterPos().subtract(check.toCenterPos());
 
         Vec3d dir = new Vec3d(direction.offsetX, 0, direction.offsetZ).normalize();
@@ -44,7 +35,7 @@ public class HighwayUtils {
     }
 
     public static boolean isTypeAir(Block block) {
-        return block.equals(Blocks.AIR) || block.equals(Blocks.CAVE_AIR) || block.equals(Blocks.VOID_AIR);
+        return block.getDefaultState().isAir();
     }
 
     public static Block returnAirIfAir(Block block) {
@@ -52,7 +43,7 @@ public class HighwayUtils {
         return block;
     }
 
-    public static boolean isBothSameButAirCheck(Block one, Block two) {
+    public static boolean blockEqualsAndAirCheck(Block one, Block two) {
         return returnAirIfAir(one).equals(returnAirIfAir(two));
     }
 

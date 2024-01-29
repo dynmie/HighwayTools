@@ -25,7 +25,7 @@ public class BaritoneProcess implements IBaritoneProcess {
 
         if (tools.getPathfinder().getGoal() == null) return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
 
-        BlockPos pos = tools.getPathfinder().getGoal().getMcPos();
+        BlockPos pos = tools.getPathfinder().getGoal();
 
         if (pos == null) {
             return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
