@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 
 /**
@@ -26,6 +27,7 @@ public class Place {
         }
 
         Item itemToFind = task.getBlueprintTask().getTargetBlock().asItem();
+        itemToFind = itemToFind.equals(Items.AIR) ? tools.getFillerBlock().get().asItem() : itemToFind;
 
         int slot = HInvUtils.prepareItemInHotbar(itemToFind);
         if (slot == -1) {

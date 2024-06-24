@@ -1,6 +1,7 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.interaction.Break;
+import me.dynmie.highway.highwaytools.interaction.Liquid;
 import me.dynmie.highway.highwaytools.interaction.Place;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.HighwayUtils;
@@ -13,6 +14,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 public class TaskExecutor {
 
@@ -32,26 +34,30 @@ public class TaskExecutor {
             case BROKEN -> doBroken(task);
             case PLACED -> doPlaced(task);
             case BREAK -> doBreak(task, check);
-            case PLACE -> doPlace(task, check);
+            case PLACE, LIQUID -> doPlace(task, check);
             default -> {}
         }
     }
 
     private void doBreaking(BlockTask task, boolean check) {
         if (mc.world == null || mc.player == null) return;
-        Block block = mc.world.getBlockState(task.getBlockPos()).getBlock();
+        BlockState state = mc.world.getBlockState(task.getBlockPos());
+        Block block = state.getBlock();
 
         if (HighwayUtils.isTypeAir(block)) {
             task.updateState(TaskState.BROKEN);
             return;
         }
 
-//        tools.info("breaking");
-
         // check liquid
+        if (Liquid.isLiquid(state)) {
+            Liquid.updateTask(task);
+            return;
+        }
 
         if (!mc.player.isOnGround()) return;
         if (check) return;
+
         mineBlock(task);
     }
 
@@ -117,6 +123,12 @@ public class TaskExecutor {
             return;
         }
 
+        // one block below player
+        if (task.getBlockPos().equals(mc.player.getBlockPos().offset(Direction.DOWN))) {
+            task.updateState(TaskState.DONE);
+            return;
+        }
+
 //        if (targetBlock.equals(tools.getFillerBlock().get())) {
 //
 //            if (block.equals(tools.getMainBlock().get()) || !BlockUtils.canPlace(task.getBlockPos(), true)) {
@@ -160,10 +172,14 @@ public class TaskExecutor {
             return;
         }
 
-        // TODO: liquid
+        if (Liquid.isLiquid(state)) {
+            Liquid.updateTask(task);
+            return;
+        }
 
-        if (!mc.player.isOnGround()) return;
         if (check) return;
+        if (!mc.player.isOnGround()) return;
+        if (Liquid.handleLiquid(tools, task)) return;
 
         mineBlock(task);
     }
@@ -174,7 +190,11 @@ public class TaskExecutor {
         Block block = state.getBlock();
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
-        // TODO LIQUID
+        // LIQUID
+        if (task.getTaskState() == TaskState.LIQUID && !Liquid.isLiquid(state)) {
+            task.updateState(TaskState.DONE);
+            return;
+        }
 
         if (block.equals(tools.getMainBlock().get()) && targetBlock.equals(tools.getMainBlock().get())) {
             task.updateState(TaskState.PLACED);
@@ -187,12 +207,14 @@ public class TaskExecutor {
         }
 
         if (HighwayUtils.isTypeAir(targetBlock)) {
-            if (!HighwayUtils.isTypeAir(block)) {
-                task.updateState(TaskState.BREAK);
-            } else {
-                task.updateState(TaskState.BROKEN);
+            if (!Liquid.isLiquid(state)) {
+                if (!HighwayUtils.isTypeAir(block)) {
+                    task.updateState(TaskState.BREAK);
+                } else {
+                    task.updateState(TaskState.BROKEN);
+                }
+                return;
             }
-            return;
         }
 
 //        if (!block.equals(targetBlock)) {
@@ -202,14 +224,13 @@ public class TaskExecutor {
 //            }
 //        }
 
+        if (check) return;
+
         if (!BlockUtils.canPlace(task.getBlockPos(), true)) {
-//            task.updateState(TaskState.DONE);
             return;
         }
 
-        if (check) return;
         placeBlock(task);
-//        tools.info("place");
     }
 
     private void mineBlock(BlockTask task) {
