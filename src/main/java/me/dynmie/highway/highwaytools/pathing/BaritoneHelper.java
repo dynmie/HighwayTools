@@ -11,6 +11,7 @@ public class BaritoneHelper {
     private boolean allowInventory = BaritoneAPI.getSettings().allowInventory.defaultValue;
 
     private final HighwayTools tools;
+
     public BaritoneHelper(HighwayTools tools) {
         this.tools = tools;
     }

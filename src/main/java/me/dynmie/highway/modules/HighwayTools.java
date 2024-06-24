@@ -274,7 +274,8 @@ public class HighwayTools extends Module {
     private HorizontalDirection direction = HorizontalDirection.North;
 
     private BlockPos currentPosition = new BlockPos(0, 64, 0);
-    private BlockPos startPosition = new BlockPos(0, 64, 0);;
+    private BlockPos startPosition = new BlockPos(0, 64, 0);
+    ;
 
     public Vec3d start = new Vec3d(0d, 64d, 0d);
     public int blocksBroken = 0;
@@ -366,7 +367,8 @@ public class HighwayTools extends Module {
             BlockPos pos = entry.getKey();
             BlockTask task = entry.getValue();
 
-            if (task.getBlueprintTask().getTargetBlock().equals(Blocks.AIR) && task.getTaskState() == TaskState.DONE) continue;
+            if (task.getBlueprintTask().getTargetBlock().equals(Blocks.AIR) && task.getTaskState() == TaskState.DONE)
+                continue;
 
             if (!(task.getTaskState() == TaskState.BREAK || task.getTaskState() == TaskState.PLACE || task.getTaskState() == TaskState.DONE || task.getTaskState() == TaskState.BREAKING || task.getTaskState() == TaskState.BROKEN)) {
                 continue;
@@ -375,7 +377,7 @@ public class HighwayTools extends Module {
             Color sideColor;
             if (task.getTaskState() == TaskState.BREAK) {
                 sideColor = renderMineSideColor.get();
-            } else if (task.getTaskState() == TaskState.PLACE){
+            } else if (task.getTaskState() == TaskState.PLACE) {
                 sideColor = renderPlaceSideColor.get();
             } else if (task.getTaskState() == TaskState.DONE) {
                 sideColor = renderDoneSideColor.get();
@@ -388,7 +390,7 @@ public class HighwayTools extends Module {
             Color lineColor;
             if (task.getTaskState() == TaskState.BREAK) {
                 lineColor = renderMineLineColor.get();
-            } else if (task.getTaskState() == TaskState.PLACE){
+            } else if (task.getTaskState() == TaskState.PLACE) {
                 lineColor = renderPlaceLineColor.get();
             } else if (task.getTaskState() == TaskState.DONE) {
                 lineColor = renderDoneLineColor.get();

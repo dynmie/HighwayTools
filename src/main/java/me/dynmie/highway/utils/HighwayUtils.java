@@ -19,10 +19,10 @@ public class HighwayUtils {
         return (int) Math.floor(reach);
     }
 
-    public static void sortByReach(List<MBlockPos> blockPosList) {
-        if (mc.player == null) return;
-        blockPosList.sort(Comparator.comparingDouble(one -> mc.player.getEyePos().distanceTo(one.getMcPos().toCenterPos())));
-    }
+//    public static void sortByReach(List<MBlockPos> blockPosList) {
+//        if (mc.player == null) return;
+//        blockPosList.sort(Comparator.comparingDouble(one -> mc.player.getEyePos().distanceTo(one.getMcPos().toCenterPos())));
+//    }
 
     public static boolean isBehind(BlockPos origin, BlockPos check, HorizontalDirection direction) {
         Vec3d oToCDir = origin.toCenterPos().subtract(check.toCenterPos());

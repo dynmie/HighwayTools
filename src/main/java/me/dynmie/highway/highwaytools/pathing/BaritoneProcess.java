@@ -11,6 +11,7 @@ import net.minecraft.util.math.BlockPos;
 public class BaritoneProcess implements IBaritoneProcess {
 
     private final HighwayTools tools;
+
     public BaritoneProcess(HighwayTools tools) {
         this.tools = tools;
     }

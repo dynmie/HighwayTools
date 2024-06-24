@@ -1,6 +1,7 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.interaction.Break;
+import me.dynmie.highway.highwaytools.interaction.Place;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.HighwayUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -10,8 +11,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
@@ -69,7 +68,7 @@ public class TaskExecutor {
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
         if (HighwayUtils.isTypeAir(targetBlock)) {
             BlockSoundGroup soundGroup = targetBlock.getDefaultState().getSoundGroup();
-            mc.player.playSound(soundGroup.getBreakSound(), SoundCategory.BLOCKS, soundGroup.getVolume(), soundGroup.getPitch());
+            mc.player.playSound(soundGroup.getBreakSound(), soundGroup.getVolume(), soundGroup.getPitch());
             task.updateState(TaskState.DONE);
         } else {
             tools.setBlocksBroken(tools.getBlocksBroken() + 1);
@@ -152,7 +151,6 @@ public class TaskExecutor {
         }
 
 
-
         if (HighwayUtils.isTypeAir(currentBlock)) {
             if (HighwayUtils.isTypeAir(targetBlock)) {
                 task.updateState(TaskState.BROKEN);
@@ -230,7 +228,7 @@ public class TaskExecutor {
     }
 
     private void placeBlock(BlockTask task) {
-        place(task, 1);
+        Place.place(task);
     }
 
     private boolean place(BlockTask task, int slot) {
