@@ -58,7 +58,7 @@ public class BaritonePathfinder {
 
         if (!isDone(nextPos.up())) return;
         if (!isDone(nextPos)) return;
-        if (!isDone(nextPos)) return;
+        if (!isDone(nextPos.down())) return;
 
 
         tools.setCurrentPosition(nextPos);
