@@ -82,12 +82,12 @@ public class HighwayTools extends Module {
         .build()
     );
 
-    private final Setting<Floor> floor = sgGeneral.add(new EnumSetting.Builder<Floor>()
-        .name("floor")
-        .description("What floor placement mode to use.")
-        .defaultValue(Floor.Replace)
-        .build()
-    );
+//    private final Setting<Floor> floor = sgGeneral.add(new EnumSetting.Builder<Floor>()
+//        .name("floor")
+//        .description("What floor placement mode to use.")
+//        .defaultValue(Floor.Replace)
+//        .build()
+//    );
 
     private final Setting<Boolean> railings = sgGeneral.add(new BoolSetting.Builder()
         .name("railings")
@@ -501,9 +501,9 @@ public class HighwayTools extends Module {
         return height;
     }
 
-    public Setting<Floor> getFloor() {
-        return floor;
-    }
+//    public Setting<Floor> getFloor() {
+//        return floor;
+//    }
 
     public Setting<Boolean> getRailings() {
         return railings;
