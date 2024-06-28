@@ -16,6 +16,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
+import java.util.Objects;
+
 public class TaskExecutor {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
@@ -35,6 +37,8 @@ public class TaskExecutor {
             case PLACED -> doPlaced(task);
             case BREAK -> doBreak(task, check);
             case PLACE, LIQUID -> doPlace(task, check);
+            case PENDING_BREAK -> doPendingBreak(task);
+            case PENDING_PLACE -> doPendingPlace(task);
             default -> {}
         }
     }
@@ -91,6 +95,15 @@ public class TaskExecutor {
 
         if ((HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock) || task.getBlueprintTask().isFiller()) && !state.isReplaceable()) {
             tools.setBlocksPlaced(tools.getBlocksPlaced() + 1);
+
+            if (tools.getAdaptivePlaceDelay().get() && Place.getExtraPlaceDelay() > 0) {
+                if (Place.getExtraPlaceDelay() == 1) {
+                    Place.setExtraPlaceDelay(0);
+                } else {
+                    Place.setExtraPlaceDelay(Place.getExtraPlaceDelay() / 2);
+                }
+            }
+
             task.updateState(TaskState.DONE);
             return;
         }
@@ -233,16 +246,55 @@ public class TaskExecutor {
         placeBlock(task);
     }
 
+    private void doPendingBreak(BlockTask task) {
+        task.onStuck();
+    }
+
+    private void doPendingPlace(BlockTask task) {
+        Objects.requireNonNull(mc.world, "world should not be null");
+
+        BlockPos pos = task.getBlockPos();
+        BlockState state = mc.world.getBlockState(pos);
+
+        Block block = state.getBlock();
+        Block targetBlock = task.getBlueprintTask().getTargetBlock();
+
+        if (task.getTaskState() == TaskState.LIQUID && !Liquid.isLiquid(state)) {
+            task.updateState(TaskState.DONE);
+            return;
+        }
+
+        if (block.equals(tools.getMainBlock().get()) && targetBlock.equals(tools.getMainBlock().get())) {
+            task.updateState(TaskState.PLACED);
+            return;
+        }
+
+        if (targetBlock.equals(tools.getFillerBlock().get()) && block.equals(tools.getFillerBlock().get())) {
+            task.updateState(TaskState.PLACED);
+            return;
+        }
+
+        if (HighwayUtils.isTypeAir(targetBlock)) {
+            if (!Liquid.isLiquid(state)) {
+                if (!HighwayUtils.isTypeAir(block)) {
+                    task.updateState(TaskState.BREAK);
+                } else {
+                    task.updateState(TaskState.BROKEN);
+                }
+            }
+        }
+    }
+
     private void mineBlock(BlockTask task) {
         BlockPos pos = task.getBlockPos();
 
         if (tools.getRotation().get().mine && tools.getRotateCamera().get() && mc.player != null) {
-            mc.player.setPitch((float) Rotations.getPitch(task.getBlockPos()));
             mc.player.setYaw((float) Rotations.getYaw(task.getBlockPos()));
+            mc.player.setPitch((float) Rotations.getPitch(task.getBlockPos()));
         }
 
         if (tools.getRotation().get().mine) {
-            Rotations.rotate(Rotations.getPitch(pos), Rotations.getYaw(pos), () -> {});
+            Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), () -> {});
         }
 
         Break.mine(task);

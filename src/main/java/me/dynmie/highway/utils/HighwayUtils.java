@@ -1,15 +1,11 @@
 package me.dynmie.highway.utils;
 
 import meteordevelopment.meteorclient.utils.misc.HorizontalDirection;
-import meteordevelopment.meteorclient.utils.misc.MBlockPos;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-
-import java.util.Comparator;
-import java.util.List;
 
 public class HighwayUtils {
 

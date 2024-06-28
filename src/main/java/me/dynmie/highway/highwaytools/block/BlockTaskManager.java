@@ -1,6 +1,7 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
+import me.dynmie.highway.highwaytools.interaction.Inventory;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.HighwayUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -52,6 +53,7 @@ public class BlockTaskManager {
 
     public void generateTask(BlockPos pos, BlueprintTask blueprintTask) {
         if (mc.player == null) return;
+
         Vec3d eyePos = mc.player.getEyePos();
         BlockState blockState = mc.player.getWorld().getBlockState(pos);
         Block currentBlock = blockState.getBlock();
@@ -114,6 +116,11 @@ public class BlockTaskManager {
     }
 
     public void runTasks() {
+        if (Inventory.getWaitTicks() > 1) {
+            Inventory.decreaseWaitTicks(1);
+            return;
+        }
+
         for (BlockTask task : blockTasks.values()) {
             tools.getTaskExecutor().doTask(task, true);
 

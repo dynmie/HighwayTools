@@ -59,6 +59,14 @@ public class BlockTask {
         }
     }
 
+    public void onStuck() {
+        this.onStuck(1);
+    }
+
+    public void onStuck(int weight) {
+        this.stuckTicks += weight;
+    }
+
     public int getStuckTicks() {
         return stuckTicks;
     }

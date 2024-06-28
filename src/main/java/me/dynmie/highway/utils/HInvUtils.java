@@ -16,9 +16,6 @@ public class HInvUtils {
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     public static int prepareItemInHotbar(Item item) {
-        Objects.requireNonNull(client.player, "player cannot be null");
-        Objects.requireNonNull(client.interactionManager, "interactionManager cannot be null");
-
         FindItemResult itemResult = InvUtils.find(item);
 
         if (!itemResult.found()) {
@@ -28,13 +25,7 @@ public class HInvUtils {
         int slot = itemResult.slot();
 
         if (!itemResult.isHotbar()) {
-            FindItemResult hotbarResult = InvUtils.find(ItemStack::isEmpty, 0, 8);
-
-            int bestSlot = client.player.getInventory().selectedSlot;
-
-            if (hotbarResult.found() && !InvUtils.testInMainHand(ItemStack::isEmpty)) {
-                bestSlot = hotbarResult.slot();
-            }
+            int bestSlot = findFreeHotbarSlot();
 
             InvUtils.move().from(slot).to(bestSlot);
 
@@ -42,6 +33,20 @@ public class HInvUtils {
         }
 
         return slot;
+    }
+
+    public static int findFreeHotbarSlot() {
+        Objects.requireNonNull(client.player, "player cannot be null");
+
+        FindItemResult hotbarResult = InvUtils.find(ItemStack::isEmpty, 0, 8);
+
+        int bestSlot = client.player.getInventory().selectedSlot;
+
+        if (hotbarResult.found() && !InvUtils.testInMainHand(ItemStack::isEmpty)) {
+            bestSlot = hotbarResult.slot();
+        }
+
+        return bestSlot;
     }
 
 }

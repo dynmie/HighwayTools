@@ -34,6 +34,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class HighwayTools extends Module {
 
@@ -60,8 +61,8 @@ public class HighwayTools extends Module {
     private static final BlockPos ZERO = new BlockPos(0, 0, 0);
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgRenderMine = settings.createGroup("Render Mine");
-    private final SettingGroup sgRenderPlace = settings.createGroup("Render Place");
+    private final SettingGroup sgMine = settings.createGroup("Mine");
+    private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     // General
@@ -70,8 +71,8 @@ public class HighwayTools extends Module {
         .name("width")
         .description("Width of the highway.")
         .defaultValue(4)
-        .range(1, 5)
-        .sliderRange(1, 5)
+        .range(1, 8)
+        .sliderRange(1, 8)
         .build()
     );
 
@@ -174,6 +175,15 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Integer> taskTimeout = sgGeneral.add(new IntSetting.Builder()
+        .name("task-timeout")
+        .description("Time to wait for the server before trying again.")
+        .defaultValue(8)
+        .min(0)
+        .sliderMax(40)
+        .build()
+    );
+
     private final Setting<Boolean> disconnectOnToggle = sgGeneral.add(new BoolSetting.Builder()
         .name("disconnect-on-toggle")
         .description("Automatically disconnects when the module is turned off, for example for not having enough blocks.")
@@ -181,75 +191,98 @@ public class HighwayTools extends Module {
         .build()
     );
 
-    // Render Mine
+    // Mine
 
-    private final Setting<Boolean> renderMine = sgRenderMine.add(new BoolSetting.Builder()
+    private final Setting<Boolean> avoidMineGhostBlocks = sgMine.add(new BoolSetting.Builder()
+        .name("avoid-ghost-blocks")
+        .description("Avoid ghost blocks when mining. Disabling will allow faster mining at the cost of increased risk of ghost blocks.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Boolean> renderMine = sgMine.add(new BoolSetting.Builder()
         .name("render-blocks-to-mine")
         .description("Render blocks to be mined.")
         .defaultValue(true)
         .build()
     );
 
-    private final Setting<ShapeMode> renderMineShape = sgRenderMine.add(new EnumSetting.Builder<ShapeMode>()
-        .name("blocks-to-mine-shape-mode")
+    private final Setting<ShapeMode> renderMineShape = sgMine.add(new EnumSetting.Builder<ShapeMode>()
+        .name("mine-shape-mode")
         .description("How the blocks to be mined are rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
 
-    private final Setting<SettingColor> renderMineSideColor = sgRenderMine.add(new ColorSetting.Builder()
-        .name("blocks-to-mine-side-color")
+    private final Setting<SettingColor> renderMineSideColor = sgMine.add(new ColorSetting.Builder()
+        .name("mine-side-color")
         .description("Color of blocks to be mined.")
         .defaultValue(new SettingColor(225, 0, 0, 26))
         .build()
     );
 
-    private final Setting<SettingColor> renderMineLineColor = sgRenderMine.add(new ColorSetting.Builder()
-        .name("blocks-to-mine-line-color")
+    private final Setting<SettingColor> renderMineLineColor = sgMine.add(new ColorSetting.Builder()
+        .name("mine-line-color")
         .description("Color of blocks to be mined.")
-        .defaultValue(new SettingColor(225, 255, 0, 91))
+        .defaultValue(new SettingColor(225, 0, 0, 91))
         .build()
     );
 
-    // Render Place
+    // Place
 
-    private final Setting<Boolean> renderPlace = sgRenderPlace.add(new BoolSetting.Builder()
+    private final Setting<Integer> placeDelay = sgPlace.add(new IntSetting.Builder()
+        .name("place-delay")
+        .description("Change the time between places.")
+        .defaultValue(3)
+        .min(0)
+        .sliderMax(40)
+        .build()
+    );
+
+    private final Setting<Boolean> adaptivePlaceDelay = sgPlace.add(new BoolSetting.Builder()
+        .name("adaptive-place-delay")
+        .description("Enable adaptive place delay.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Boolean> renderPlace = sgPlace.add(new BoolSetting.Builder()
         .name("render-blocks-to-place")
         .description("Render blocks to be placed.")
         .defaultValue(true)
         .build()
     );
 
-    private final Setting<ShapeMode> renderPlaceShape = sgRenderPlace.add(new EnumSetting.Builder<ShapeMode>()
-        .name("blocks-to-place-shape-mode")
+    private final Setting<ShapeMode> renderPlaceShape = sgPlace.add(new EnumSetting.Builder<ShapeMode>()
+        .name("place-render-mode")
         .description("How the blocks to be placed are rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
 
-    private final Setting<SettingColor> renderPlaceSideColor = sgRenderPlace.add(new ColorSetting.Builder()
-        .name("blocks-to-place-side-color")
+    private final Setting<SettingColor> renderPlaceSideColor = sgPlace.add(new ColorSetting.Builder()
+        .name("place-side-color")
         .description("Color of blocks to be placed.")
         .defaultValue(new SettingColor(0, 255, 225, 26))
         .build()
     );
 
-    private final Setting<SettingColor> renderPlaceLineColor = sgRenderPlace.add(new ColorSetting.Builder()
-        .name("blocks-to-place-line-color")
+    private final Setting<SettingColor> renderPlaceLineColor = sgPlace.add(new ColorSetting.Builder()
+        .name("place-line-color")
         .description("Color of blocks to be placed.")
         .defaultValue(new SettingColor(0, 255, 225, 91))
         .build()
     );
 
-    private final Setting<SettingColor> renderDoneSideColor = sgRenderPlace.add(new ColorSetting.Builder()
-        .name("blocks-to-done-side-color")
+    private final Setting<SettingColor> renderDoneSideColor = sgPlace.add(new ColorSetting.Builder()
+        .name("done-side-color")
         .description("Color of blocks to be placed.")
         .defaultValue(new SettingColor(80, 80, 80, 26))
         .build()
     );
 
-    private final Setting<SettingColor> renderDoneLineColor = sgRenderPlace.add(new ColorSetting.Builder()
-        .name("blocks-to-done-line-color")
+    private final Setting<SettingColor> renderDoneLineColor = sgPlace.add(new ColorSetting.Builder()
+        .name("done-line-color")
         .description("Color of blocks to be placed.")
         .defaultValue(new SettingColor(80, 80, 80, 91))
         .build()
@@ -275,7 +308,7 @@ public class HighwayTools extends Module {
 
     private BlockPos currentPosition = new BlockPos(0, 64, 0);
     private BlockPos startPosition = new BlockPos(0, 64, 0);
-    ;
+
 
     public Vec3d start = new Vec3d(0d, 64d, 0d);
     public int blocksBroken = 0;
@@ -284,9 +317,11 @@ public class HighwayTools extends Module {
 
     private final BaritoneHelper baritoneHelper = new BaritoneHelper(this);
     private final BaritonePathfinder pathfinder = new BaritonePathfinder(this);
-    private final BlueprintGenerator blueprintGenerator = new BlueprintGenerator(this);
+    private BlueprintGenerator blueprintGenerator = new BlueprintGenerator(this);
     private final BlockTaskManager blockTaskManager = new BlockTaskManager(this);
     private final TaskExecutor taskExecutor = new TaskExecutor(this);
+
+    private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
 
     public HighwayTools() {
         super(HighwayAddon.CATEGORY, "highway-tools", "Automatically builds highways.");
@@ -294,9 +329,6 @@ public class HighwayTools extends Module {
 
     @Override
     public void onActivate() {
-        baritoneHelper.setupBaritone();
-        blockTaskManager.clearTasks();
-
         direction = HorizontalDirection.get(mc.player.getYaw());
 
         start = mc.player.getPos();
@@ -305,6 +337,11 @@ public class HighwayTools extends Module {
 
         blocksBroken = 0;
         blocksPlaced = 0;
+
+        blueprintGenerator = new BlueprintGenerator(this);
+
+        baritoneHelper.setupBaritone();
+        blockTaskManager.clearTasks();
 
         displayInfo = true;
     }
@@ -319,7 +356,6 @@ public class HighwayTools extends Module {
 
         pathfinder.resetPathing();
         baritoneHelper.resetBaritone();
-
     }
 
     @Override
@@ -341,23 +377,24 @@ public class HighwayTools extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-//        if (width.get() < 3 && dir.diagonal) {
-//            errorEarly("Diagonal highways with width less than 3 are not supported.");
-//            return;
-//        }
-
-//        if (checkForPause()) return;
+        if (width.get() < 3 && direction.diagonal) {
+            errorEarly("Diagonal highways with width less than 3 are not supported.");
+            return;
+        }
 
         blockTaskManager.updateTasks();
+        runnableQueue.forEach(Runnable::run);
+
         if (checkForPause()) return;
+
         pathfinder.updatePathing();
         blockTaskManager.runTasks();
-
     }
 
     public boolean checkForPause() {
         if (Modules.get().get(AutoEat.class).eating) return true;
         if (Modules.get().get(AutoGap.class).isEating()) return true;
+
         return false;
     }
 
@@ -422,6 +459,10 @@ public class HighwayTools extends Module {
             default -> 0;
             case 2, 3 -> 1;
             case 4, 5 -> 2;
+            case 6, 7 -> 3;
+            case 8, 9 -> 4;
+            case 10, 11 -> 5;
+            case 12, 13 -> 6;
         };
     }
 
@@ -429,7 +470,10 @@ public class HighwayTools extends Module {
         return switch (width.get()) {
             default -> 0;
             case 3, 4 -> 1;
-            case 5 -> 2;
+            case 5, 6 -> 2;
+            case 7, 8 -> 3;
+            case 9, 10 -> 4;
+            case 11, 12 -> 5;
         };
     }
 
@@ -446,6 +490,10 @@ public class HighwayTools extends Module {
         text.append(String.format("%sBlocks placed: %s%d", Formatting.GRAY, Formatting.WHITE, blocksPlaced));
 
         return text;
+    }
+
+    public void runNextTick(Runnable runnable) {
+        runnableQueue.add(runnable);
     }
 
     public Setting<Integer> getWidth() {
@@ -500,6 +548,10 @@ public class HighwayTools extends Module {
         return disconnectOnToggle;
     }
 
+    public Setting<Boolean> getAvoidMineGhostBlocks() {
+        return avoidMineGhostBlocks;
+    }
+
     public Setting<Boolean> getRenderMine() {
         return renderMine;
     }
@@ -512,8 +564,20 @@ public class HighwayTools extends Module {
         return renderMineSideColor;
     }
 
+    public Setting<Integer> getTaskTimeout() {
+        return taskTimeout;
+    }
+
     public Setting<SettingColor> getRenderMineLineColor() {
         return renderMineLineColor;
+    }
+
+    public Setting<Integer> getPlaceDelay() {
+        return placeDelay;
+    }
+
+    public Setting<Boolean> getAdaptivePlaceDelay() {
+        return adaptivePlaceDelay;
     }
 
     public Setting<Boolean> getRenderPlace() {

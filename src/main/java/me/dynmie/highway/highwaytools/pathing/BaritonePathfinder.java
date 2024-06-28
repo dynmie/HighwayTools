@@ -5,7 +5,6 @@ import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.DirectionUtils;
 import me.dynmie.highway.utils.HighwayUtils;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 
@@ -48,13 +47,13 @@ public class BaritonePathfinder {
 
         BlockPos nextPos = tools.getCurrentPosition().add(DirectionUtils.toVec3i(tools.getDirection()));
 
-        BlockState upState = mc.world.getBlockState(nextPos.up());
-        BlockState midState = mc.world.getBlockState(nextPos);
-        BlockState downState = mc.world.getBlockState(nextPos.down());
+//        BlockState upState = mc.world.getBlockState(nextPos.up());
+//        BlockState midState = mc.world.getBlockState(nextPos);
+//        BlockState downState = mc.world.getBlockState(nextPos.down());
 
-        if (!upState.isAir()) return;
-        if (!midState.isAir()) return;
-        if (downState.isReplaceable()) return;
+//        if (!upState.isAir()) return;
+//        if (!midState.isAir()) return;
+//        if (downState.isReplaceable()) return;
 
         if (!isDone(nextPos.up())) return;
         if (!isDone(nextPos)) return;
