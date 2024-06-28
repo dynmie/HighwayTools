@@ -24,15 +24,12 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -154,26 +151,26 @@ public class HighwayTools extends Module {
         .build()
     );
 
-    private final Setting<List<Item>> trashItems = sgGeneral.add(new ItemListSetting.Builder()
-        .name("trash-items")
-        .description("Items that are considered trash and can be thrown out.")
-        .defaultValue(Items.NETHERRACK, Items.QUARTZ, Items.GOLD_NUGGET, Items.GLOWSTONE_DUST, Items.BLACKSTONE, Items.BASALT)
-        .build()
-    );
-
-    private final Setting<Boolean> dontBreakTools = sgGeneral.add(new BoolSetting.Builder()
-        .name("dont-break-tools")
-        .description("Don't break tools.")
-        .defaultValue(false)
-        .build()
-    );
-
-    private final Setting<Boolean> mineEnderChests = sgGeneral.add(new BoolSetting.Builder()
-        .name("mine-ender-chests")
-        .description("Mines ender chests for obsidian.")
-        .defaultValue(true)
-        .build()
-    );
+//    private final Setting<List<Item>> trashItems = sgGeneral.add(new ItemListSetting.Builder()
+//        .name("trash-items")
+//        .description("Items that are considered trash and can be thrown out.")
+//        .defaultValue(Items.NETHERRACK, Items.QUARTZ, Items.GOLD_NUGGET, Items.GLOWSTONE_DUST, Items.BLACKSTONE, Items.BASALT)
+//        .build()
+//    );
+//
+//    private final Setting<Boolean> dontBreakTools = sgGeneral.add(new BoolSetting.Builder()
+//        .name("dont-break-tools")
+//        .description("Don't break tools.")
+//        .defaultValue(false)
+//        .build()
+//    );
+//
+//    private final Setting<Boolean> mineEnderChests = sgGeneral.add(new BoolSetting.Builder()
+//        .name("mine-ender-chests")
+//        .description("Mines ender chests for obsidian.")
+//        .defaultValue(true)
+//        .build()
+//    );
 
     private final Setting<Integer> taskTimeout = sgGeneral.add(new IntSetting.Builder()
         .name("task-timeout")
@@ -532,17 +529,17 @@ public class HighwayTools extends Module {
         return fillerBlock;
     }
 
-    public Setting<List<Item>> getTrashItems() {
-        return trashItems;
-    }
-
-    public Setting<Boolean> getDontBreakTools() {
-        return dontBreakTools;
-    }
-
-    public Setting<Boolean> getMineEnderChests() {
-        return mineEnderChests;
-    }
+//    public Setting<List<Item>> getTrashItems() {
+//        return trashItems;
+//    }
+//
+//    public Setting<Boolean> getDontBreakTools() {
+//        return dontBreakTools;
+//    }
+//
+//    public Setting<Boolean> getMineEnderChests() {
+//        return mineEnderChests;
+//    }
 
     public Setting<Boolean> getDisconnectOnToggle() {
         return disconnectOnToggle;
