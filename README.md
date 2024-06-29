@@ -1,4 +1,6 @@
 # MetroHighwayTools
+<img alt="GitHub release" src="https://img.shields.io/github/v/release/dynmie/HighwayTools?logo=java&style=for-the-badge"> <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/dynmie/HighwayTools?style=for-the-badge"> <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/dynmie/HighwayTools/gradle.yml?branch=master&logo=github&style=for-the-badge">
+
 
 [![that's crazy](https://github.com/dynmie/HighwayTools/assets/41315732/d458e693-fc99-4006-9935-3745dead2d1e)](https://github.com/dynmie/HighwayTools)
 
