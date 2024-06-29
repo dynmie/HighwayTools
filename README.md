@@ -15,7 +15,7 @@ Created because the current highway tools built into Meteor is just plain terrib
 
 MetroHighwayTools is confirmed to work on 6b6t; I have personally verified it.
 
-> [!DANGER]
+> [!CAUTION]
 > This addon is not finished! There are bugs, and they are very big. Use at your own risk.
 
 ## Setting up
