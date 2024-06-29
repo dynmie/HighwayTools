@@ -19,18 +19,23 @@ Created because the current highway tools built into Meteor is just plain terrib
 - [Fabric loader](https://fabricmc.net/)
 - [Meteor Client 1.20.4](https://meteorclient.com/)
 
+### Installation
+1. Install Fabric
+2. Add both the Meteor Client and the MetroHighwayTools files to your `mods` folder
+3. Done!
+
 ## Todo
-[ ] Restock from shulker boxes and ender chests
-[ ]  Grind obsidian from ender chests
-[ ] Save minimum requirements of materials
-[ ] Disable mouse grab on container open
-[ ] Choose best tool to mine block by rating
-[ ] Ignore block list; ignore a select list of blocks to avoid breaking them
-[ ] Highway, Tunnel, and Flat blueprint modes
-[ ] Corner blocks
-[ ] Intelligent placing by block side
-[ ] Deep search for placing
-[ ] Scaffold/bridge if block side view is not visible
+[] Restock from shulker boxes and ender chests
+[]  Grind obsidian from ender chests
+[] Save minimum requirements of materials
+[] Disable mouse grab on container open
+[] Choose best tool to mine block by rating
+[] Ignore block list; ignore a select list of blocks to avoid breaking them
+[] Highway, Tunnel, and Flat blueprint modes
+[] Corner blocks
+[] Intelligent placing by block side
+[] Deep search for placing
+[] Scaffold/bridge if block side view is not visible
 
 ## Known issues
 - Tools not in your hotbar will not be used
