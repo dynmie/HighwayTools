@@ -3,12 +3,37 @@
 A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s highway tools,
 with inspiration from [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
 
-### About
+## About
 An attempt to add a fully automated highway building robot to Meteor client.
-Created because the current highway tools built into Meteor is terrible.
+Created because the current highway tools built into Meteor is just plain terrible.
 
-### Warning
-This addon is not finished! There are bugs, and they are very big. Use at your own risk.
+### Modules
+- Highway Tools
 
-### Contributing
+> [!WARNING]
+> This addon is not finished! There are bugs, and they are very big. Use at your own risk.
+
+## Setting up
+
+### Dependencies
+- [Fabric loader](https://fabricmc.net/)
+- [Meteor Client 1.20.4](https://meteorclient.com/)
+
+## Todo
+[ ] Restock from shulker boxes and ender chests
+[ ]  Grind obsidian from ender chests
+[ ] Save minimum requirements of materials
+[ ] Disable mouse grab on container open
+[ ] Choose best tool to mine block by rating
+[ ] Ignore block list; ignore a select list of blocks to avoid breaking them
+[ ] Highway, Tunnel, and Flat blueprint modes
+[ ] Corner blocks
+[ ] Intelligent placing by block side
+[ ] Deep search for placing
+[ ] Scaffold/bridge if block side view is not visible
+
+## Known issues
+- Tools not in your hotbar will not be used
+
+## Contributing
 If you would like to contribute, create a pull request!
