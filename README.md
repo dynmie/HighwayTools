@@ -3,8 +3,7 @@
 [![that's crazy](https://github.com/dynmie/HighwayTools/assets/41315732/d458e693-fc99-4006-9935-3745dead2d1e)](https://github.com/dynmie/HighwayTools)
 
 
-A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s highway tools,
-with inspiration from [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
+A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s and [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
 
 
 You can find a demonstration video [here](https://www.youtube.com/watch?v=SsU_WlwD_mo).
@@ -16,10 +15,7 @@ Created because the current highway tools built into Meteor is just plain terrib
 
 MetroHighwayTools is confirmed to work on 6b6t; I have personally verified it.
 
-### Modules
-- Highway Tools
-
-> [!WARNING]
+> [!DANGER]
 > This addon is not finished! There are bugs, and they are very big. Use at your own risk.
 
 ## Setting up
