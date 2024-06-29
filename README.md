@@ -1,11 +1,20 @@
 # MetroHighwayTools
 
+[![that's crazy](https://github.com/dynmie/HighwayTools/assets/41315732/d458e693-fc99-4006-9935-3745dead2d1e)](https://github.com/dynmie/HighwayTools)
+
+
 A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s highway tools,
 with inspiration from [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
+
+
+You can find a demonstration video [here](https://www.youtube.com/watch?v=SsU_WlwD_mo).
 
 ## About
 An attempt to add a fully automated highway building robot to Meteor client.
 Created because the current highway tools built into Meteor is just plain terrible.
+
+
+MetroHighwayTools is confirmed to work on 6b6t; I have personally verified it.
 
 ### Modules
 - Highway Tools
@@ -25,17 +34,19 @@ Created because the current highway tools built into Meteor is just plain terrib
 3. Done!
 
 ## Todo
-[] Restock from shulker boxes and ender chests
-[]  Grind obsidian from ender chests
-[] Save minimum requirements of materials
-[] Disable mouse grab on container open
-[] Choose best tool to mine block by rating
-[] Ignore block list; ignore a select list of blocks to avoid breaking them
-[] Highway, Tunnel, and Flat blueprint modes
-[] Corner blocks
-[] Intelligent placing by block side
-[] Deep search for placing
-[] Scaffold/bridge if block side view is not visible
+- [x] Basic mining
+- [x] Basic placing
+- [] Restock from shulker boxes and ender chests
+- [] Grind obsidian from ender chests
+- [] Save minimum requirements of materials
+- [] Disable mouse grab on container open
+- [] Choose best tool to mine block by rating
+- [] Ignore block list; ignore a select list of blocks to avoid breaking them
+- [] Highway, Tunnel, and Flat blueprint modes
+- [] Corner blocks
+- [] Intelligent placing by block side
+- [] Deep search for placing
+- [] Scaffold/bridge if block side view is not visible
 
 ## Known issues
 - Tools not in your hotbar will not be used
