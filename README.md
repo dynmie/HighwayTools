@@ -30,19 +30,19 @@ MetroHighwayTools is confirmed to work on 6b6t; I have personally verified it.
 3. Done!
 
 ## Todo
-- [x] Basic mining
-- [x] Basic placing
-- [] Restock from shulker boxes and ender chests
-- [] Grind obsidian from ender chests
-- [] Save minimum requirements of materials
-- [] Disable mouse grab on container open
-- [] Choose best tool to mine block by rating
-- [] Ignore block list; ignore a select list of blocks to avoid breaking them
-- [] Highway, Tunnel, and Flat blueprint modes
-- [] Corner blocks
-- [] Intelligent placing by block side
-- [] Deep search for placing
-- [] Scaffold/bridge if block side view is not visible
+- [x] Basic mining and placing
+- [x] Task shuffle for multi-player building
+- [ ] Restock from shulker boxes and ender chests
+- [ ] Grind obsidian from ender chests
+- [ ] Save minimum amount of materials
+- [ ] Choose best tool to mine block by score
+- [ ] Ignore a list of blocks to avoid breaking them
+- [ ] Highway, Tunnel, and Flat blueprint modes
+- [ ] Corner blocks
+- [ ] Intelligent placing by block side
+- [ ] Deep search for placing
+- [ ] Scaffold/bridge if block side view is not visible
+- [ ] Option for impossible placements 
 
 ## Known issues
 - Tools not in your hotbar will not be used
