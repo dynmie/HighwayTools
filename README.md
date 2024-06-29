@@ -23,12 +23,13 @@ MetroHighwayTools is confirmed to work on 6b6t—I have personally verified it.
 ## Setting up
 
 ### Dependencies
-- [Fabric loader](https://fabricmc.net/)
+- [Fabric Loader](https://fabricmc.net/)
 - [Meteor Client 1.20.4](https://meteorclient.com/)
+- [Baritone 1.20.4](https://github.com/cabaletta/baritone)
 
 ### Installation
 1. Install Fabric
-2. Add both Meteor Client and MetroHighwayTools to your `mods` folder
+2. Add Meteor Client, Baritone, and MetroHighwayTools to your `mods` folder
 3. Done!
 
 ## Todo
