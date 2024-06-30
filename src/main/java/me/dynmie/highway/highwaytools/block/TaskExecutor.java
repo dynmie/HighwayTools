@@ -129,6 +129,10 @@ public class TaskExecutor {
         if (mc.world == null || mc.player == null) return;
         BlockState state = mc.world.getBlockState(task.getBlockPos());
         Block currentBlock = state.getBlock();
+
+        Block mainBlock = tools.getMainBlock().get();
+        Block fillerBlock = tools.getFillerBlock().get();
+
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
         if (currentBlock.equals(Blocks.END_PORTAL_FRAME) || currentBlock.equals(Blocks.BEDROCK) || currentBlock.equals(Blocks.NETHER_PORTAL) || currentBlock.equals(Blocks.END_PORTAL)) {
@@ -142,33 +146,33 @@ public class TaskExecutor {
             return;
         }
 
-//        if (targetBlock.equals(tools.getFillerBlock().get())) {
+//        if (targetBlock == fillerBlock) {
 //
-//            if (block.equals(tools.getMainBlock().get()) || !BlockUtils.canPlace(task.getBlockPos(), true)) {
+//            if (currentBlock == mainBlock || !BlockUtils.canPlace(task.getBlockPos(), true)) {
 //                task.updateState(TaskState.DONE);
 //                return;
 //            }
 //            return;
 //        }
-
-//        if (targetBlock.equals(tools.getFillerBlock().get()) && (HighwayUtils.isTypeAir(block) || !BlockUtils.canPlace(task.getBlockPos(), true))) {
+//
+//        if (targetBlock == tools.getFillerBlock().get() && state.isAir() || !BlockUtils.canPlace(task.getBlockPos(), true)) {
+//            task.updateState(TaskState.DONE);
+//            return;
+//        }
+//
+//        if (targetBlock == mainBlock && currentBlock == mainBlock) {
 //            task.updateState(TaskState.DONE);
 //            return;
 //        }
 
-//        if (targetBlock.equals(tools.getMainBlock().get()) && block.equals(tools.getMainBlock().get())) {
-//            task.updateState(TaskState.DONE);
-//            return;
-//        }
-
-        if (targetBlock.equals(tools.getFillerBlock().get())) {
+        if (targetBlock == fillerBlock) {
             if (HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
                 task.updateState(TaskState.DONE);
                 return;
             }
         }
 
-        if (targetBlock.equals(tools.getMainBlock().get())) {
+        if (targetBlock == mainBlock) {
             if (HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
                 task.updateState(TaskState.DONE);
                 return;

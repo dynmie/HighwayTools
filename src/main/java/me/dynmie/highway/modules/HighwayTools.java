@@ -35,9 +35,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class HighwayTools extends Module {
 
-    public enum Floor {
-        Replace,
-        PlaceMissing
+    public enum BlueprintMode {
+        Highway,
+        Tunnel,
+        Flat
     }
 
     public enum Rotation {
@@ -82,24 +83,25 @@ public class HighwayTools extends Module {
         .build()
     );
 
-//    private final Setting<Floor> floor = sgGeneral.add(new EnumSetting.Builder<Floor>()
-//        .name("floor")
-//        .description("What floor placement mode to use.")
-//        .defaultValue(Floor.Replace)
-//        .build()
-//    );
+    private final Setting<BlueprintMode> blueprintMode = sgGeneral.add(new EnumSetting.Builder<BlueprintMode>()
+        .name("blueprint-mode")
+        .description("What blueprint mode mode to use.")
+        .defaultValue(BlueprintMode.Highway)
+        .build()
+    );
 
     private final Setting<Boolean> railings = sgGeneral.add(new BoolSetting.Builder()
         .name("railings")
         .description("Builds railings next to the highway.")
         .defaultValue(true)
+        .visible(() -> blueprintMode.get() != BlueprintMode.Flat)
         .build()
     );
 
     private final Setting<Boolean> mineAboveRailings = sgGeneral.add(new BoolSetting.Builder()
         .name("mine-above-railings")
         .description("Mines blocks above railings.")
-        .visible(railings::get)
+        .visible(() -> railings.get() && railings.isVisible())
         .defaultValue(true)
         .build()
     );
@@ -501,9 +503,9 @@ public class HighwayTools extends Module {
         return height;
     }
 
-//    public Setting<Floor> getFloor() {
-//        return floor;
-//    }
+    public Setting<BlueprintMode> getBlueprintMode() {
+        return blueprintMode;
+    }
 
     public Setting<Boolean> getRailings() {
         return railings;

@@ -37,18 +37,23 @@ public class BlueprintGenerator {
 
         double reach = Math.ceil(tools.getReach().get().floatValue());
 
-        // in front of player (r = 1)
-//        for (int r = 1; r < reach; r++) {
         for (int r = (int) Math.floor(-reach) * 5; r <= (int) Math.ceil(reach) * 5; r++) {
             BlockPos pos = currentPosition.add(DirectionUtils.toVec3i(tools.getDirection()).multiply(r));
 
             generateFloor(pos);
-            if (tools.getRailings().get()) {
-                generateRailings(pos);
+
+            if (tools.getBlueprintMode().get() != HighwayTools.BlueprintMode.Flat) {
+                if (tools.getRailings().get()) {
+                    generateRailings(pos);
+                }
+
+                if (tools.getRailings().get()
+                    && tools.getMineAboveRailings().get()
+                ) {
+                    generateAboveRailings(pos); // if mine above railings then gen
+                }
             }
-            if (tools.getRailings().get() && tools.getMineAboveRailings().get()) {
-                generateAboveRailings(pos); // if mine above railings then gen
-            }
+
             generateFront(pos);
         }
     }
@@ -58,25 +63,31 @@ public class BlueprintGenerator {
 
         for (BlockPos pos : positions) {
             BlueprintTask task = new BlueprintTask(Blocks.AIR);
-            blueprint.put(pos.mutableCopy().toImmutable(), task);
+            blueprint.put(pos, task);
         }
     }
 
     private void generateFloor(BlockPos basePosition) {
         List<BlockPos> positions = provider.getFloor(basePosition);
 
+        boolean filler = tools.getBlueprintMode().get() == HighwayTools.BlueprintMode.Tunnel;
+        Block block = filler ? fillerBlock : mainBlock;
+
         for (BlockPos pos : positions) {
-            BlueprintTask task = new BlueprintTask(mainBlock);
-            blueprint.put(pos.mutableCopy().toImmutable(), task);
+            BlueprintTask task = new BlueprintTask(block, filler);
+            blueprint.put(pos, task);
         }
     }
 
     private void generateRailings(BlockPos basePosition) {
         List<BlockPos> positions = provider.getRailings(basePosition);
 
+        boolean filler = tools.getBlueprintMode().get() == HighwayTools.BlueprintMode.Tunnel;
+        Block block = filler ? fillerBlock : mainBlock;
+
         for (BlockPos pos : positions) {
-            BlueprintTask task = new BlueprintTask(mainBlock);
-            blueprint.put(pos.mutableCopy().toImmutable(), task);
+            BlueprintTask task = new BlueprintTask(block, filler);
+            blueprint.put(pos, task);
         }
     }
 
@@ -85,7 +96,7 @@ public class BlueprintGenerator {
 
         for (BlockPos pos : positions) {
             BlueprintTask task = new BlueprintTask(Blocks.AIR);
-            blueprint.put(pos.mutableCopy().toImmutable(), task);
+            blueprint.put(pos, task);
         }
     }
 

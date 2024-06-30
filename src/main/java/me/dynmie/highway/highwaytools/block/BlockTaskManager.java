@@ -66,7 +66,11 @@ public class BlockTaskManager {
 
         if (eyePos.distanceTo(pos.toCenterPos()) >= tools.getReach().get() + 1) return;
 
-        if (currentBlock.equals(Blocks.END_PORTAL_FRAME) || currentBlock.equals(Blocks.BEDROCK) || currentBlock.equals(Blocks.NETHER_PORTAL) || currentBlock.equals(Blocks.END_PORTAL)) {
+        if (currentBlock.equals(Blocks.END_PORTAL_FRAME)
+            || currentBlock.equals(Blocks.BEDROCK)
+            || currentBlock.equals(Blocks.NETHER_PORTAL)
+            || currentBlock.equals(Blocks.END_PORTAL)
+        ) {
             BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
             addTask(task);
             return;

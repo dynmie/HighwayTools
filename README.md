@@ -40,7 +40,7 @@ MetroHighwayTools is confirmed to work on 6b6t—I have personally verified it.
 - [ ] Save minimum amount of materials
 - [ ] Choose best tool to mine block by score
 - [ ] Ignore a list of blocks to avoid breaking them
-- [ ] Highway, Tunnel, and Flat blueprint modes
+- [x] Highway, Tunnel, and Flat blueprint modes
 - [ ] Corner blocks
 - [ ] Intelligent placing by block side
 - [ ] Deep search for placing
