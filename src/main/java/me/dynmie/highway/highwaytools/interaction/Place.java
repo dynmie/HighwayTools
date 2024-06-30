@@ -3,7 +3,7 @@ package me.dynmie.highway.highwaytools.interaction;
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
-import me.dynmie.highway.utils.HInvUtils;
+import me.dynmie.highway.utils.InventoryUtils;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
@@ -38,7 +38,7 @@ public class Place {
         Item itemToFind = task.getBlueprintTask().getTargetBlock().asItem();
         itemToFind = itemToFind.equals(Items.AIR) ? tools.getFillerBlock().get().asItem() : itemToFind;
 
-        int slot = HInvUtils.prepareItemInHotbar(itemToFind);
+        int slot = InventoryUtils.prepareItemInHotbar(itemToFind);
         if (slot == -1) {
             return;//todo
         }

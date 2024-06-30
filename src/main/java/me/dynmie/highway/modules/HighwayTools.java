@@ -192,6 +192,13 @@ public class HighwayTools extends Module {
 
     // Mine
 
+    private final Setting<Boolean> preferSilkTouch = sgMine.add(new BoolSetting.Builder()
+        .name("prefer-silk-touch")
+        .description("Prefer silk touch pickaxes when mining blocks.")
+        .defaultValue(true)
+        .build()
+    );
+
     private final Setting<Boolean> avoidMineGhostBlocks = sgMine.add(new BoolSetting.Builder()
         .name("avoid-ghost-blocks")
         .description("Avoid ghost blocks when mining. Disabling will allow faster mining at the cost of increased risk of ghost blocks.")
@@ -545,6 +552,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getDisconnectOnToggle() {
         return disconnectOnToggle;
+    }
+
+    public Setting<Boolean> getPreferSilkTouch() {
+        return preferSilkTouch;
     }
 
     public Setting<Boolean> getAvoidMineGhostBlocks() {

@@ -3,9 +3,8 @@ package me.dynmie.highway.highwaytools.interaction;
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
+import me.dynmie.highway.utils.InventoryUtils;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -27,16 +26,12 @@ public class Break {
         Objects.requireNonNull(mc.player, "player should not be null");
         Objects.requireNonNull(mc.world, "world should not be null");
 
+        HighwayTools tools = Modules.get().get(HighwayTools.class);
+
         BlockPos pos = task.getBlockPos();
         BlockState blockState = mc.world.getBlockState(pos);
 
-        FindItemResult toolResult = InvUtils.findFastestTool(blockState);
-        // TODO find best tool in inventory and swap; prefer hotbar
-//        int toolSlot = toolResult.slot();
-        int toolSlot = toolResult.found() ? toolResult.slot() : 1;
-//        int freeSlot = HInvUtils.findFreeHotbarSlot();
-//        InvUtils.move().from(toolSlot).to(freeSlot);
-        mc.player.getInventory().selectedSlot = toolSlot;
+        mc.player.getInventory().selectedSlot = InventoryUtils.prepareToolInHotbar(blockState, tools.getPreferSilkTouch().get());
 
         int ticksNeeded = calcTicksToBreakBlock(pos, blockState);
 
