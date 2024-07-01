@@ -4,7 +4,7 @@ import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.DirectionUtils;
-import me.dynmie.highway.utils.HighwayUtils;
+import me.dynmie.highway.utils.LocationUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 
@@ -34,7 +34,7 @@ public class BaritonePathfinder {
             BlockTask task = entry.getValue();
 
             if (task.getTaskState() != TaskState.DONE) {
-                if (HighwayUtils.isBehind(tools.getCurrentPosition(), blockPos, tools.getDirection())) {
+                if (LocationUtils.isBehind(tools.getCurrentPosition(), blockPos, tools.getDirection())) {
                     return;
                 }
             }

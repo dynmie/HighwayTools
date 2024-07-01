@@ -1,12 +1,13 @@
 package me.dynmie.highway.highwaytools.block;
 
-import me.dynmie.highway.highwaytools.interaction.Break;
-import me.dynmie.highway.highwaytools.interaction.Liquid;
-import me.dynmie.highway.highwaytools.interaction.Place;
+import me.dynmie.highway.highwaytools.handler.BreakHandler;
+import me.dynmie.highway.highwaytools.handler.InventoryHandler;
+import me.dynmie.highway.highwaytools.handler.LiquidHandler;
+import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.modules.HighwayTools;
-import me.dynmie.highway.utils.HighwayUtils;
+import me.dynmie.highway.utils.BlockUtils;
+import me.dynmie.highway.utils.LiquidUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -23,9 +24,17 @@ public class TaskExecutor {
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
     private final HighwayTools tools;
+    private final BreakHandler breakHandler;
+    private final InventoryHandler inventoryHandler;
+    private final LiquidHandler liquidHandler;
+    private final PlaceHandler placeHandler;
 
-    public TaskExecutor(HighwayTools tools) {
+    public TaskExecutor(HighwayTools tools, BreakHandler breakHandler, InventoryHandler inventoryHandler, LiquidHandler liquidHandler, PlaceHandler placeHandler) {
         this.tools = tools;
+        this.breakHandler = breakHandler;
+        this.inventoryHandler = inventoryHandler;
+        this.liquidHandler = liquidHandler;
+        this.placeHandler = placeHandler;
     }
 
     public void doTask(BlockTask task, boolean check) {
@@ -48,14 +57,14 @@ public class TaskExecutor {
         BlockState state = mc.world.getBlockState(task.getBlockPos());
         Block block = state.getBlock();
 
-        if (HighwayUtils.isTypeAir(block)) {
+        if (BlockUtils.isTypeAir(block)) {
             task.updateState(TaskState.BROKEN);
             return;
         }
 
         // check liquid
-        if (Liquid.isLiquid(state)) {
-            Liquid.updateTask(task);
+        if (LiquidUtils.isLiquid(state)) {
+            liquidHandler.updateTask(task);
             return;
         }
 
@@ -70,13 +79,13 @@ public class TaskExecutor {
         if (mc.world == null) return;
         Block block = mc.world.getBlockState(task.getBlockPos()).getBlock();
 
-        if (!HighwayUtils.isTypeAir(block)) {
+        if (!BlockUtils.isTypeAir(block)) {
             task.updateState(TaskState.BREAK);
             return;
         }
 
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
-        if (HighwayUtils.isTypeAir(targetBlock)) {
+        if (BlockUtils.isTypeAir(targetBlock)) {
             BlockSoundGroup soundGroup = targetBlock.getDefaultState().getSoundGroup();
             mc.player.playSound(soundGroup.getBreakSound(), soundGroup.getVolume(), soundGroup.getPitch());
             task.updateState(TaskState.DONE);
@@ -93,14 +102,14 @@ public class TaskExecutor {
         Block currentBlock = state.getBlock();
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
-        if ((HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock) || task.getBlueprintTask().isFiller()) && !state.isReplaceable()) {
+        if ((BlockUtils.blockEqualsAndAirCheck(currentBlock, targetBlock) || task.getBlueprintTask().isFiller()) && !state.isReplaceable()) {
             tools.setBlocksPlaced(tools.getBlocksPlaced() + 1);
 
-            if (tools.getAdaptivePlaceDelay().get() && Place.getExtraPlaceDelay() > 0) {
-                if (Place.getExtraPlaceDelay() == 1) {
-                    Place.setExtraPlaceDelay(0);
+            if (tools.getAdaptivePlaceDelay().get() && placeHandler.getExtraPlaceDelay() > 0) {
+                if (placeHandler.getExtraPlaceDelay() == 1) {
+                    placeHandler.setExtraPlaceDelay(0);
                 } else {
-                    Place.setExtraPlaceDelay(Place.getExtraPlaceDelay() / 2);
+                    placeHandler.setExtraPlaceDelay(placeHandler.getExtraPlaceDelay() / 2);
                 }
             }
 
@@ -109,7 +118,7 @@ public class TaskExecutor {
         }
 
         // break if target block is not the current block and target block is air
-        if (HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock) && HighwayUtils.isTypeAir(targetBlock)) {
+        if (BlockUtils.blockEqualsAndAirCheck(currentBlock, targetBlock) && BlockUtils.isTypeAir(targetBlock)) {
             task.updateState(TaskState.BREAK);
             return;
         }
@@ -166,22 +175,22 @@ public class TaskExecutor {
 //        }
 
         if (targetBlock == fillerBlock) {
-            if (HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
+            if (BlockUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
                 task.updateState(TaskState.DONE);
                 return;
             }
         }
 
         if (targetBlock == mainBlock) {
-            if (HighwayUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
+            if (BlockUtils.blockEqualsAndAirCheck(currentBlock, targetBlock)) {
                 task.updateState(TaskState.DONE);
                 return;
             }
         }
 
 
-        if (HighwayUtils.isTypeAir(currentBlock)) {
-            if (HighwayUtils.isTypeAir(targetBlock)) {
+        if (BlockUtils.isTypeAir(currentBlock)) {
+            if (BlockUtils.isTypeAir(targetBlock)) {
                 task.updateState(TaskState.BROKEN);
             } else {
                 task.updateState(TaskState.PLACE);
@@ -189,14 +198,14 @@ public class TaskExecutor {
             return;
         }
 
-        if (Liquid.isLiquid(state)) {
-            Liquid.updateTask(task);
+        if (LiquidUtils.isLiquid(state)) {
+            liquidHandler.updateTask(task);
             return;
         }
 
         if (check) return;
         if (!mc.player.isOnGround()) return;
-        if (Liquid.handleLiquid(tools, task)) return;
+        if (liquidHandler.handleLiquid(task)) return;
 
         mineBlock(task);
     }
@@ -208,7 +217,7 @@ public class TaskExecutor {
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
         // LIQUID
-        if (task.getTaskState() == TaskState.LIQUID && !Liquid.isLiquid(state)) {
+        if (task.getTaskState() == TaskState.LIQUID && !LiquidUtils.isLiquid(state)) {
             task.updateState(TaskState.DONE);
             return;
         }
@@ -223,9 +232,9 @@ public class TaskExecutor {
             return;
         }
 
-        if (HighwayUtils.isTypeAir(targetBlock)) {
-            if (!Liquid.isLiquid(state)) {
-                if (!HighwayUtils.isTypeAir(block)) {
+        if (BlockUtils.isTypeAir(targetBlock)) {
+            if (!LiquidUtils.isLiquid(state)) {
+                if (!BlockUtils.isTypeAir(block)) {
                     task.updateState(TaskState.BREAK);
                 } else {
                     task.updateState(TaskState.BROKEN);
@@ -243,7 +252,7 @@ public class TaskExecutor {
 
         if (check) return;
 
-        if (!BlockUtils.canPlace(task.getBlockPos(), true)) {
+        if (!meteordevelopment.meteorclient.utils.world.BlockUtils.canPlace(task.getBlockPos(), true)) {
             return;
         }
 
@@ -263,7 +272,7 @@ public class TaskExecutor {
         Block block = state.getBlock();
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
-        if (task.getTaskState() == TaskState.LIQUID && !Liquid.isLiquid(state)) {
+        if (task.getTaskState() == TaskState.LIQUID && !LiquidUtils.isLiquid(state)) {
             task.updateState(TaskState.DONE);
             return;
         }
@@ -278,9 +287,9 @@ public class TaskExecutor {
             return;
         }
 
-        if (HighwayUtils.isTypeAir(targetBlock)) {
-            if (!Liquid.isLiquid(state)) {
-                if (!HighwayUtils.isTypeAir(block)) {
+        if (BlockUtils.isTypeAir(targetBlock)) {
+            if (!LiquidUtils.isLiquid(state)) {
+                if (!BlockUtils.isTypeAir(block)) {
                     task.updateState(TaskState.BREAK);
                 } else {
                     task.updateState(TaskState.BROKEN);
@@ -301,11 +310,11 @@ public class TaskExecutor {
             Rotations.rotate(Rotations.getYaw(pos), Rotations.getPitch(pos), () -> {});
         }
 
-        Break.mine(task);
+        breakHandler.mine(task);
     }
 
     private void placeBlock(BlockTask task) {
-        Place.place(task);
+        placeHandler.place(task);
     }
 
     private boolean place(BlockTask task, int slot) {
@@ -313,7 +322,7 @@ public class TaskExecutor {
             mc.player.setPitch((float) Rotations.getPitch(task.getBlockPos()));
             mc.player.setYaw((float) Rotations.getYaw(task.getBlockPos()));
         }
-        return BlockUtils.place(task.getBlockPos(), Hand.MAIN_HAND, slot, tools.getRotation().get().place, 0, true, true, false);
+        return meteordevelopment.meteorclient.utils.world.BlockUtils.place(task.getBlockPos(), Hand.MAIN_HAND, slot, tools.getRotation().get().place, 0, true, true, false);
     }
 
 }

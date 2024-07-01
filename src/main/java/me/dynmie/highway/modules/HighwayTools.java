@@ -7,6 +7,10 @@ import me.dynmie.highway.highwaytools.block.TaskExecutor;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintGenerator;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
+import me.dynmie.highway.highwaytools.handler.BreakHandler;
+import me.dynmie.highway.highwaytools.handler.InventoryHandler;
+import me.dynmie.highway.highwaytools.handler.LiquidHandler;
+import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.highwaytools.pathing.BaritoneHelper;
 import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -167,12 +171,12 @@ public class HighwayTools extends Module {
 //        .build()
 //    );
 //
-//    private final Setting<Boolean> mineEnderChests = sgGeneral.add(new BoolSetting.Builder()
-//        .name("mine-ender-chests")
-//        .description("Mines ender chests for obsidian.")
-//        .defaultValue(true)
-//        .build()
-//    );
+    private final Setting<Boolean> mineEnderChests = sgGeneral.add(new BoolSetting.Builder()
+        .name("mine-ender-chests")
+        .description("Mines ender chests for obsidian.")
+        .defaultValue(true)
+        .build()
+    );
 
     private final Setting<Integer> taskTimeout = sgGeneral.add(new IntSetting.Builder()
         .name("task-timeout")
@@ -195,7 +199,7 @@ public class HighwayTools extends Module {
     private final Setting<Boolean> preferSilkTouch = sgMine.add(new BoolSetting.Builder()
         .name("prefer-silk-touch")
         .description("Prefer silk touch pickaxes when mining blocks.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
@@ -315,19 +319,23 @@ public class HighwayTools extends Module {
     private BlockPos currentPosition = new BlockPos(0, 64, 0);
     private BlockPos startPosition = new BlockPos(0, 64, 0);
 
-
     public Vec3d start = new Vec3d(0d, 64d, 0d);
     public int blocksBroken = 0;
     public int blocksPlaced = 0;
     private boolean displayInfo = true;
 
+    private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
+
+    private final InventoryHandler inventoryHandler = new InventoryHandler(this);
+    private final BreakHandler breakHandler = new BreakHandler(this, inventoryHandler);
+    private final LiquidHandler liquidHandler = new LiquidHandler(this);
+    private final PlaceHandler placeHandler = new PlaceHandler(this, inventoryHandler);
+
     private final BaritoneHelper baritoneHelper = new BaritoneHelper(this);
     private final BaritonePathfinder pathfinder = new BaritonePathfinder(this);
     private BlueprintGenerator blueprintGenerator = new BlueprintGenerator(this);
-    private final BlockTaskManager blockTaskManager = new BlockTaskManager(this);
-    private final TaskExecutor taskExecutor = new TaskExecutor(this);
-
-    private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
+    private final BlockTaskManager blockTaskManager = new BlockTaskManager(this, inventoryHandler);
+    private final TaskExecutor taskExecutor = new TaskExecutor(this, breakHandler, inventoryHandler, liquidHandler, placeHandler);
 
     public HighwayTools() {
         super(HighwayAddon.CATEGORY, "highway-tools", "Automatically builds highways.");
@@ -546,9 +554,9 @@ public class HighwayTools extends Module {
 //        return dontBreakTools;
 //    }
 //
-//    public Setting<Boolean> getMineEnderChests() {
-//        return mineEnderChests;
-//    }
+    public Setting<Boolean> getMineEnderChests() {
+        return mineEnderChests;
+    }
 
     public Setting<Boolean> getDisconnectOnToggle() {
         return disconnectOnToggle;

@@ -1,10 +1,10 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
-import me.dynmie.highway.highwaytools.interaction.Inventory;
+import me.dynmie.highway.highwaytools.handler.InventoryHandler;
 import me.dynmie.highway.modules.HighwayTools;
-import me.dynmie.highway.utils.HighwayUtils;
-import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import me.dynmie.highway.utils.BlockUtils;
+import me.dynmie.highway.utils.LocationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -26,9 +26,11 @@ public class BlockTaskManager {
     private final Set<BlockTask> sortedTasks = new ConcurrentSkipListSet<>(getBlockTaskComparator());
 
     private final HighwayTools tools;
+    private final InventoryHandler inventoryHandler;
 
-    public BlockTaskManager(HighwayTools tools) {
+    public BlockTaskManager(HighwayTools tools, InventoryHandler inventoryHandler) {
         this.tools = tools;
+        this.inventoryHandler = inventoryHandler;
     }
 
     public void updateTasks() {
@@ -59,7 +61,7 @@ public class BlockTaskManager {
         Block currentBlock = blockState.getBlock();
 
         // padding
-        if (HighwayUtils.isBehind(tools.getStartPosition(), pos, tools.getDirection())) {
+        if (LocationUtils.isBehind(tools.getStartPosition(), pos, tools.getDirection())) {
             return;
         }
 
@@ -77,8 +79,8 @@ public class BlockTaskManager {
         }
 
         // place
-        if (blockState.isReplaceable() && !HighwayUtils.isTypeAir(blueprintTask.getTargetBlock())) {
-            if (!BlockUtils.canPlace(pos)) {
+        if (blockState.isReplaceable() && !BlockUtils.isTypeAir(blueprintTask.getTargetBlock())) {
+            if (!meteordevelopment.meteorclient.utils.world.BlockUtils.canPlace(pos)) {
                 BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
                 addTask(task);
                 return;
@@ -97,7 +99,7 @@ public class BlockTaskManager {
         }
 
         //
-        if (blockState.isAir() && HighwayUtils.isTypeAir(blueprintTask.getTargetBlock())) {
+        if (blockState.isAir() && BlockUtils.isTypeAir(blueprintTask.getTargetBlock())) {
             BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
             addTask(task);
             return;
@@ -120,8 +122,8 @@ public class BlockTaskManager {
     }
 
     public void runTasks() {
-        if (Inventory.getWaitTicks() > 1) {
-            Inventory.decreaseWaitTicks(1);
+        if (inventoryHandler.getWaitTicks() > 1) {
+            inventoryHandler.decreaseWaitTicks(1);
             return;
         }
 

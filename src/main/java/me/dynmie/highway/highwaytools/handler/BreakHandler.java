@@ -1,10 +1,8 @@
-package me.dynmie.highway.highwaytools.interaction;
+package me.dynmie.highway.highwaytools.handler;
 
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
-import me.dynmie.highway.utils.InventoryUtils;
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -18,20 +16,26 @@ import java.util.Objects;
 /**
  * @author dynmie
  */
-public class Break {
+public class BreakHandler {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public static void mine(BlockTask task) {
+    private final HighwayTools tools;
+    private final InventoryHandler inventoryHandler;
+
+    public BreakHandler(HighwayTools tools, InventoryHandler inventoryHandler) {
+        this.tools = tools;
+        this.inventoryHandler = inventoryHandler;
+    }
+
+    public void mine(BlockTask task) {
         Objects.requireNonNull(mc.player, "player should not be null");
         Objects.requireNonNull(mc.world, "world should not be null");
-
-        HighwayTools tools = Modules.get().get(HighwayTools.class);
 
         BlockPos pos = task.getBlockPos();
         BlockState blockState = mc.world.getBlockState(pos);
 
-        mc.player.getInventory().selectedSlot = InventoryUtils.prepareToolInHotbar(blockState, tools.getPreferSilkTouch().get());
+        mc.player.getInventory().selectedSlot = inventoryHandler.prepareToolInHotbar(blockState);
 
         int ticksNeeded = calcTicksToBreakBlock(pos, blockState);
 
@@ -44,7 +48,7 @@ public class Break {
         task.incrementMinedTicks();
     }
 
-    private static void mineNormally(BlockTask task, int ticksRequired) {
+    private void mineNormally(BlockTask task, int ticksRequired) {
         Objects.requireNonNull(mc.interactionManager, "interactionManager should not be null");
 
         TaskState state = task.getTaskState();
@@ -60,7 +64,7 @@ public class Break {
                 sendStopPacket(pos, direction);
                 swingHand();
 
-                if (!Modules.get().get(HighwayTools.class).getAvoidMineGhostBlocks().get()) {
+                if (!tools.getAvoidMineGhostBlocks().get()) {
                     mc.interactionManager.breakBlock(pos);
                 }
             } else {
@@ -69,12 +73,12 @@ public class Break {
         }
     }
 
-    private static void swingHand() {
+    private void swingHand() {
         if (mc.player == null) return;
         mc.player.swingHand(Hand.MAIN_HAND);
     }
 
-    private static void sendStopPacket(BlockPos pos, Direction direction) {
+    private void sendStopPacket(BlockPos pos, Direction direction) {
         if (mc.getNetworkHandler() == null) return;
 
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(
@@ -84,7 +88,7 @@ public class Break {
         ));
     }
 
-    private static void sendStartPacket(BlockPos pos, Direction direction) {
+    private void sendStartPacket(BlockPos pos, Direction direction) {
         if (mc.getNetworkHandler() == null) return;
 
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(
@@ -94,7 +98,7 @@ public class Break {
         ));
     }
 
-    private static void sendAbortPacket(BlockPos pos, Direction direction) {
+    private void sendAbortPacket(BlockPos pos, Direction direction) {
         if (mc.getNetworkHandler() == null) return;
 
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(

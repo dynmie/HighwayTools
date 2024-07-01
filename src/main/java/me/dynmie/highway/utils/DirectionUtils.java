@@ -8,6 +8,10 @@ import net.minecraft.util.math.Vec3i;
  */
 public class DirectionUtils {
 
+    private DirectionUtils() {
+        throw new UnsupportedOperationException();
+    }
+
     public static Vec3i toVec3i(HorizontalDirection direction) {
         return new Vec3i(direction.offsetX, 0, direction.offsetZ);
     }

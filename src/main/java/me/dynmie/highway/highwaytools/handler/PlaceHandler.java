@@ -1,10 +1,8 @@
-package me.dynmie.highway.highwaytools.interaction;
+package me.dynmie.highway.highwaytools.handler;
 
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
-import me.dynmie.highway.utils.InventoryUtils;
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.MinecraftClient;
@@ -15,18 +13,24 @@ import net.minecraft.util.Hand;
 /**
  * @author dynmie
  */
-public class Place {
+public class PlaceHandler {
 
     private static int extraPlaceDelay = 0;
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-    public static void place(BlockTask task) {
-        HighwayTools tools = Modules.get().get(HighwayTools.class);
+    private final HighwayTools tools;
+    private final InventoryHandler inventoryHandler;
 
+    public PlaceHandler(HighwayTools tools, InventoryHandler inventoryHandler) {
+        this.tools = tools;
+        this.inventoryHandler = inventoryHandler;
+    }
+
+    public void place(BlockTask task) {
         // DELAY
         int delay = tools.getAdaptivePlaceDelay().get() ? tools.getPlaceDelay().get() + extraPlaceDelay : tools.getPlaceDelay().get();
-        Inventory.setWaitTicks(delay);
+        inventoryHandler.setWaitTicks(delay);
 
         // ROTATION
         if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
@@ -38,7 +42,7 @@ public class Place {
         Item itemToFind = task.getBlueprintTask().getTargetBlock().asItem();
         itemToFind = itemToFind.equals(Items.AIR) ? tools.getFillerBlock().get().asItem() : itemToFind;
 
-        int slot = InventoryUtils.prepareItemInHotbar(itemToFind);
+        int slot = inventoryHandler.prepareItemInHotbar(itemToFind);
         if (slot == -1) {
             return;//todo
         }
@@ -110,11 +114,11 @@ public class Place {
         }).start();
     }
 
-    public static int getExtraPlaceDelay() {
+    public int getExtraPlaceDelay() {
         return extraPlaceDelay;
     }
 
-    public static void setExtraPlaceDelay(int extraPlaceDelay) {
-        Place.extraPlaceDelay = extraPlaceDelay;
+    public void setExtraPlaceDelay(int extraPlaceDelay) {
+        PlaceHandler.extraPlaceDelay = extraPlaceDelay;
     }
 }

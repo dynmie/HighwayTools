@@ -1,5 +1,6 @@
-package me.dynmie.highway.utils;
+package me.dynmie.highway.highwaytools.handler;
 
+import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.block.BlockState;
@@ -17,11 +18,34 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /**
  * @author dynmie
  */
-public class InventoryUtils {
+public class InventoryHandler {
 
-    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private final MinecraftClient client = MinecraftClient.getInstance();
+    private final HighwayTools tools;
 
-    public static int prepareItemInHotbar(Item item) {
+    private int waitTicks = 0;
+
+    public InventoryHandler(HighwayTools tools) {
+        this.tools = tools;
+    }
+
+    public int getWaitTicks() {
+        return waitTicks;
+    }
+
+    public void setWaitTicks(int waitTicks) {
+        this.waitTicks = waitTicks;
+    }
+
+    public void increaseWaitTicks(int ticks) {
+        waitTicks += ticks;
+    }
+
+    public void decreaseWaitTicks(int ticks) {
+        waitTicks -= ticks;
+    }
+
+    public int prepareItemInHotbar(Item item) {
         FindItemResult itemResult = InvUtils.find(item);
 
         if (!itemResult.found()) {
@@ -41,7 +65,7 @@ public class InventoryUtils {
         return slot;
     }
 
-    public static int findFreeHotbarSlot() {
+    public int findFreeHotbarSlot() {
         Objects.requireNonNull(client.player, "player cannot be null");
 
         FindItemResult hotbarResult = InvUtils.find(ItemStack::isEmpty, 0, 8);
@@ -56,7 +80,7 @@ public class InventoryUtils {
         return bestSlot;
     }
 
-    public static FindItemResult findBestTool(BlockState state, boolean preferSilk) {
+    public FindItemResult findBestTool(BlockState state) {
         Objects.requireNonNull(mc.player, "player cannot be null");
 
         boolean noSilk = state.getBlock() == Blocks.ENDER_CHEST;
@@ -81,7 +105,7 @@ public class InventoryUtils {
             score += EnchantmentHelper.getLevel(Enchantments.MENDING, stack);
             score += EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack);
 
-            if (preferSilk) {
+            if (tools.getPreferSilkTouch().get()) {
                 score += EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack);
             }
 
@@ -97,11 +121,10 @@ public class InventoryUtils {
     /**
      * Moves the best item to the best slot in the hotbar and returns it.
      * @param state The block state to calculate the best tool.
-     * @param preferSilk If silk touch is preferred.
      * @return The slot with the best item.
      */
-    public static int prepareToolInHotbar(BlockState state, boolean preferSilk) {
-        FindItemResult bestToolResult = findBestTool(state, preferSilk);
+    public int prepareToolInHotbar(BlockState state) {
+        FindItemResult bestToolResult = findBestTool(state);
 
         if (!bestToolResult.found()) {
             return 0;
