@@ -3,12 +3,12 @@
   "id": "highway-tools",
   "version": "${version}",
   "name": "Highway Tools",
-  "description": "An addon template for the Meteor addons.",
+  "description": "road builder for block game",
   "authors": [
     "dynmie"
   ],
   "contact": {
-    "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "repo": "https://github.com/dynmie/HighwayTools"
   },
   "icon": "assets/template/icon.png",
   "environment": "client",
