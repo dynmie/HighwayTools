@@ -14,9 +14,6 @@ You can find a demonstration video [here](https://www.youtube.com/watch?v=SsU_Wl
 An attempt to add a fully automated highway building robot to Meteor client.
 Created because the current highway tools built into Meteor is just plain terrible.
 
-
-MetroHighwayTools is confirmed to work on 6b6t—I have personally verified it.
-
 > [!CAUTION]
 > This addon is not finished! There are bugs, and they are very big. Use at your own risk.
 
@@ -24,8 +21,8 @@ MetroHighwayTools is confirmed to work on 6b6t—I have personally verified it.
 
 ### Dependencies
 - [Fabric Loader](https://fabricmc.net/)
-- [Meteor Client 1.20.4](https://meteorclient.com/)
-- [Baritone 1.20.4](https://github.com/cabaletta/baritone)
+- [Meteor Client 1.21.4](https://meteorclient.com/)
+- [Baritone 1.21.4](https://github.com/cabaletta/baritone)
 
 ### Installation
 1. Install Fabric

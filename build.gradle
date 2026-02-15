@@ -2,8 +2,8 @@ plugins {
     id 'fabric-loom' version '1.7-SNAPSHOT'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -34,7 +34,7 @@ dependencies {
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
     implementation "dev.babbaj:nether-pathfinder:1.4.1"
-    modImplementation files('libs/baritone-api-fabric-1.10.2.jar')
+    modImplementation files('libs/baritone-api-fabric-1.13.1.jar')
 }
 
 processResources {

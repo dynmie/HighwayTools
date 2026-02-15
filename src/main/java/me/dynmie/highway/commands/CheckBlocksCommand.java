@@ -7,8 +7,6 @@ import meteordevelopment.meteorclient.commands.Command;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
 
-import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
-
 public class CheckBlocksCommand extends Command {
 
     private final HighwayTools tools;

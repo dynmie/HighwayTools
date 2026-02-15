@@ -6,10 +6,14 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 
 import java.util.Objects;
 
@@ -83,6 +87,15 @@ public class InventoryHandler {
     public FindItemResult findBestTool(BlockState state) {
         Objects.requireNonNull(mc.player, "player cannot be null");
 
+        Registry<Enchantment> enchantmentRegistry = mc.player.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+
+        RegistryEntry.Reference<Enchantment> silkTouch = enchantmentRegistry.getOrThrow(Enchantments.SILK_TOUCH);
+
+        RegistryEntry.Reference<Enchantment> unbreaking = enchantmentRegistry.getOrThrow(Enchantments.UNBREAKING);
+        RegistryEntry.Reference<Enchantment> efficiency = enchantmentRegistry.getOrThrow(Enchantments.EFFICIENCY);
+        RegistryEntry.Reference<Enchantment> mending = enchantmentRegistry.getOrThrow(Enchantments.MENDING);
+        RegistryEntry.Reference<Enchantment> fortune = enchantmentRegistry.getOrThrow(Enchantments.FORTUNE);
+
         boolean noSilk = state.getBlock() == Blocks.ENDER_CHEST;
 
         double bestScore = 1;
@@ -93,20 +106,20 @@ public class InventoryHandler {
 
             if (!stack.isSuitableFor(state)) continue;
 
-            if (EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack) != 0 && noSilk) {
+            if (EnchantmentHelper.getLevel(silkTouch, stack) != 0 && noSilk) {
                 continue;
             }
 
             double score = stack.getMiningSpeedMultiplier(state);
 
             score += stack.getMiningSpeedMultiplier(state) * 1000;
-            score += EnchantmentHelper.getLevel(Enchantments.UNBREAKING, stack);
-            score += EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
-            score += EnchantmentHelper.getLevel(Enchantments.MENDING, stack);
-            score += EnchantmentHelper.getLevel(Enchantments.FORTUNE, stack);
+            score += EnchantmentHelper.getLevel(unbreaking, stack);
+            score += EnchantmentHelper.getLevel(efficiency, stack);
+            score += EnchantmentHelper.getLevel(mending, stack);
+            score += EnchantmentHelper.getLevel(fortune, stack);
 
             if (tools.getPreferSilkTouch().get()) {
-                score += EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, stack);
+                score += EnchantmentHelper.getLevel(silkTouch, stack);
             }
 
             if (score > bestScore) {
