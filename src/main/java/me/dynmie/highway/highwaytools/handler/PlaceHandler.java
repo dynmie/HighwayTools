@@ -50,7 +50,7 @@ public class PlaceHandler {
         // PLACEMENT
         task.updateState(TaskState.PENDING_PLACE);
 
-        // TODO correct block facing avoid impossible place
+//         TODO correct block facing avoid impossible place
 //
 //        BlockPos pos = task.getBlockPos();
 //
@@ -95,7 +95,8 @@ public class PlaceHandler {
             false
         );
 
-        new Thread(() -> {
+        // If failed to place, retry place after timeout
+        Thread.startVirtualThread(() -> {
             try {
                 Thread.sleep(50L * tools.getTaskTimeout().get());
             } catch (InterruptedException e) {
@@ -111,7 +112,7 @@ public class PlaceHandler {
                     }
                 }
             });
-        }).start();
+        });
     }
 
     public int getExtraPlaceDelay() {
