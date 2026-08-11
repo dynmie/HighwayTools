@@ -4,7 +4,6 @@ import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.mixin.MultiPlayerGameModeAccessor;
 import me.dynmie.highway.modules.HighwayTools;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
@@ -47,7 +46,7 @@ public class BreakHandler {
         tools.getTaskManager().needsToolsRestockCheck();
 
         // select the best tool for this block and hold it for the whole mine.
-        // prepareToolInHotbar uses InvUtils.swap which syncs the held item to the server.
+        // prepareToolInHotbar's swap also syncs the held item to the server.
         int slot = inventoryHandler.prepareToolInHotbar(blockState);
 
         TaskState state = task.getTaskState();
@@ -80,7 +79,11 @@ public class BreakHandler {
                 if (!tools.getAvoidMineGhostBlocks().get()) {
                     BlockUtils.breakBlock(pos, true);
                 }
-                InvUtils.swapBack();
+                // Keep the tool held: the server finishes the break via its delayed-destroy
+                // path, which recomputes getDestroyProgress every server tick using the held
+                // item. swapBack() here would resync an empty/non-tool hand, dropping the
+                // progress rate ~8x and making mining appear super slow. The tool is released
+                // naturally when the next task swaps it away (e.g. PlaceHandler).
                 task.updateState(TaskState.PENDING_BREAK);
             } else if (elapsed > 10) {
                 // progress stalled for 10+ ticks — re-send START to unstick the dig

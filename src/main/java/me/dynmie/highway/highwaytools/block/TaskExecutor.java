@@ -315,6 +315,10 @@ public class TaskExecutor {
 
         // server confirmed the break — block became air
         if (me.dynmie.highway.utils.BlockUtils.isTypeAir(state.getBlock())) {
+            // The tool stays held through the whole break (see BreakHandler) and is only
+            // released when the next task swaps it away (e.g. PlaceHandler's swap/swapBack).
+            // No swapBack here: with several tasks waiting in PENDING_BREAK, restoring one
+            // would swap the tool away mid-break for another.
             task.updateState(TaskState.BROKEN);
             return;
         }
