@@ -4,6 +4,7 @@ import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
 import me.dynmie.highway.highwaytools.container.ContainerTask;
 import me.dynmie.highway.highwaytools.handler.InventoryHandler;
 import me.dynmie.highway.highwaytools.handler.InventoryManager;
+import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.BlockUtils;
 import me.dynmie.highway.utils.LocationUtils;
@@ -255,6 +256,15 @@ public class BlockTaskManager {
         return Comparator
             .comparing(BlockTask::getTaskState)
             .thenComparing((a, b) -> {
+                // During BRIDGE, prioritize tasks by placement sequence so the support gets
+                // built first (empty-sequence tasks sort highest) — mirrors Lambda's
+                // blockTaskComparator, which swaps to sequence-ordering while bridging.
+                if (tools.getPathfinder().getMovementState() == BaritonePathfinder.MovementState.BRIDGE) {
+                    if (a.getSequence().isEmpty() && b.getSequence().isEmpty()) return 0;
+                    if (a.getSequence().isEmpty()) return 1;
+                    if (b.getSequence().isEmpty()) return -1;
+                    return Integer.compare(a.getSequence().size(), b.getSequence().size());
+                }
                 if (tools.getShuffle().get()) {
                     return Integer.compare(a.getShuffle(), b.getShuffle());
                 }

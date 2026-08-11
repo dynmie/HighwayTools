@@ -758,6 +758,8 @@ public class HighwayTools extends Module {
 
     public void setCurrentPosition(BlockPos currentPosition) {
         this.currentPosition = currentPosition;
+        // mirror Lambda's RUNNING branch: advancing the front always returns to RUNNING
+        pathfinder.setMovementState(BaritonePathfinder.MovementState.RUNNING);
     }
 
     public BlockPos getStartPosition() {

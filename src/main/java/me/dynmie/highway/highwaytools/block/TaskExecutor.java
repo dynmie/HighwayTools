@@ -6,6 +6,7 @@ import me.dynmie.highway.highwaytools.handler.InventoryHandler;
 import me.dynmie.highway.highwaytools.handler.InventoryManager;
 import me.dynmie.highway.highwaytools.handler.LiquidHandler;
 import me.dynmie.highway.highwaytools.handler.PlaceHandler;
+import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder.MovementState;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.LiquidUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -74,6 +75,19 @@ public class TaskExecutor {
     }
 
     private void doImpossiblePlace(BlockTask task) {
+        // Lambda's doImpossiblePlace: when a place task is truly impossible (no reachable
+        // support), walk the player forward onto the built floor so the front becomes
+        // reachable again — exactly Lambda's `shouldBridge()` gate plus the two extra
+        // conditions (no restock in flight, and the player is within 1 block of the front).
+        if (tools.getPathfinder().shouldBridge()
+            && tools.getPathfinder().getMovementState() != MovementState.BRIDGE
+            && tools.getPathfinder().getMovementState() != MovementState.RESTOCK
+            && mc.player != null
+            && mc.player.position().distanceTo(tools.getCurrentPosition().getCenter()) < 1) {
+            tools.getPathfinder().setMovementState(MovementState.BRIDGE);
+            return;
+        }
+
         // No reachable support right now. Re-request the sequence next tick;
         // if the player moved or the pathfinder advanced, a support may exist.
         // After the stuck threshold, drop the task (mark DONE) so the bot isn't stuck forever.
