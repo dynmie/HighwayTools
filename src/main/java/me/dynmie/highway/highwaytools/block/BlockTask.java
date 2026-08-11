@@ -1,6 +1,7 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
+import me.dynmie.highway.highwaytools.place.PlacementStep;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item;
@@ -8,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.core.BlockPos;
 
+import java.util.List;
 import java.util.Random;
 
 public class BlockTask {
@@ -26,6 +28,7 @@ public class BlockTask {
     private int minedTicks = 0;
     private int startMineTick = 0;
     private ItemStack toolToUse = ItemStack.EMPTY;
+    private List<PlacementStep> sequence = List.of();
 
     public BlockTask(BlockPos blockPos, TaskState taskState, BlueprintTask blueprintTask, Item item) {
         this.blockPos = blockPos;
@@ -126,6 +129,14 @@ public class BlockTask {
 
     public ItemStack getToolToUse() {
         return toolToUse;
+    }
+
+    public List<PlacementStep> getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(List<PlacementStep> sequence) {
+        this.sequence = sequence;
     }
 
     public void setTaskState(TaskState taskState) {
