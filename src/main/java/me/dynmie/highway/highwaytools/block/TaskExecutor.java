@@ -177,7 +177,7 @@ public class TaskExecutor {
 
         Block targetBlock = task.getBlueprintTask().getTargetBlock();
 
-        if (currentBlock.equals(Blocks.END_PORTAL_FRAME) || currentBlock.equals(Blocks.BEDROCK) || currentBlock.equals(Blocks.NETHER_PORTAL) || currentBlock.equals(Blocks.END_PORTAL)) {
+        if (tools.getIgnoreList().isIgnored(currentBlock)) {
             task.updateState(TaskState.DONE);
             return;
         }

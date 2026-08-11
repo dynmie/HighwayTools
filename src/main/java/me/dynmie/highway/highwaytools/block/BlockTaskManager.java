@@ -13,7 +13,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -86,11 +85,7 @@ public class BlockTaskManager {
 
         if (eyePos.distanceTo(pos.getCenter()) >= tools.getReach().get() + 1) return;
 
-        if (currentBlock.equals(Blocks.END_PORTAL_FRAME)
-            || currentBlock.equals(Blocks.BEDROCK)
-            || currentBlock.equals(Blocks.NETHER_PORTAL)
-            || currentBlock.equals(Blocks.END_PORTAL)
-        ) {
+        if (tools.getIgnoreList().isIgnored(currentBlock)) {
             BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
             addTask(task);
             return;

@@ -14,6 +14,7 @@ import me.dynmie.highway.highwaytools.handler.LiquidHandler;
 import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.highwaytools.pathing.BaritoneHelper;
 import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder;
+import me.dynmie.highway.utils.IgnoreList;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -112,6 +113,14 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Boolean> cornerBlock = sgGeneral.add(new BoolSetting.Builder()
+        .name("corner-block")
+        .description("Build a corner block at the highway's leading edge when width is larger than 2.")
+        .defaultValue(true)
+        .visible(() -> width.get() > 2)
+        .build()
+    );
+
     private final Setting<Boolean> shuffle = sgGeneral.add(new BoolSetting.Builder()
         .name("shuffle")
         .description("Should shuffle tasks.")
@@ -193,6 +202,15 @@ public class HighwayTools extends Module {
         .name("disconnect-on-toggle")
         .description("Automatically disconnects when the module is turned off, for example for not having enough blocks.")
         .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Integer> distance = sgGeneral.add(new IntSetting.Builder()
+        .name("distance")
+        .description("Stop the bot after this many blocks along the highway direction. 0 = unlimited.")
+        .defaultValue(0)
+        .min(0)
+        .sliderMax(5000)
         .build()
     );
 
@@ -388,6 +406,7 @@ public class HighwayTools extends Module {
     private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
 
     private final InventoryManager inventoryManager = new InventoryManager(this);
+    private final IgnoreList ignoreList = new IgnoreList();
     private final InventoryHandler inventoryHandler = new InventoryHandler(this);
     private final BreakHandler breakHandler = new BreakHandler(this, inventoryHandler);
     private final LiquidHandler liquidHandler = new LiquidHandler(this);
@@ -459,7 +478,11 @@ public class HighwayTools extends Module {
         }
 
         blockTaskManager.updateTasks();
-        runnableQueue.forEach(Runnable::run);
+
+        Runnable runnable;
+        while ((runnable = runnableQueue.poll()) != null) {
+            runnable.run();
+        }
 
         if (checkForPause()) return;
 
@@ -572,6 +595,10 @@ public class HighwayTools extends Module {
         runnableQueue.add(runnable);
     }
 
+    public IgnoreList getIgnoreList() {
+        return ignoreList;
+    }
+
     public Setting<Integer> getWidth() {
         return width;
     }
@@ -590,6 +617,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getMineAboveRailings() {
         return mineAboveRailings;
+    }
+
+    public Setting<Boolean> getCornerBlock() {
+        return cornerBlock;
     }
 
     public Setting<Rotation> getRotation() {
@@ -622,6 +653,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getDisconnectOnToggle() {
         return disconnectOnToggle;
+    }
+
+    public Setting<Integer> getDistance() {
+        return distance;
     }
 
     public Setting<Boolean> getPreferSilkTouch() {
