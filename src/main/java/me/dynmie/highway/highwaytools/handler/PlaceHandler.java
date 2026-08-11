@@ -2,13 +2,19 @@ package me.dynmie.highway.highwaytools.handler;
 
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
+import me.dynmie.highway.highwaytools.place.PlacementSearcher;
+import me.dynmie.highway.highwaytools.place.PlacementStep;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.BlockHitResult;
+
+import java.util.List;
 
 /**
  * @author dynmie
@@ -21,10 +27,12 @@ public class PlaceHandler {
 
     private final HighwayTools tools;
     private final InventoryHandler inventoryHandler;
+    private final PlacementSearcher searcher;
 
     public PlaceHandler(HighwayTools tools, InventoryHandler inventoryHandler) {
         this.tools = tools;
         this.inventoryHandler = inventoryHandler;
+        this.searcher = new PlacementSearcher(tools);
     }
 
     public void place(BlockTask task) {
@@ -32,69 +40,55 @@ public class PlaceHandler {
         int delay = tools.getAdaptivePlaceDelay().get() ? tools.getPlaceDelay().get() + extraPlaceDelay : tools.getPlaceDelay().get();
         inventoryHandler.setWaitTicks(delay);
 
-        // ROTATION
-        if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
-            mc.player.setYRot((float) Rotations.getYaw(task.getBlockPos()));
-            mc.player.setXRot((float) Rotations.getPitch(task.getBlockPos()));
-        }
-
         // INVENTORY
         Item itemToFind = task.getBlueprintTask().getTargetBlock().asItem();
         itemToFind = itemToFind.equals(Items.AIR) ? tools.getFillerBlock().get().asItem() : itemToFind;
 
         int slot = inventoryHandler.prepareItemInHotbar(itemToFind);
         if (slot == -1) {
-            return;//todo
+            return; // todo: restock path (Branch B)
         }
 
-        // PLACEMENT
+        BlockPos pos = task.getBlockPos();
+
+        // FIND A PLACEMENT SEQUENCE
+        boolean illegal = tools.getIllegalPlacements().get();
+        List<PlacementStep> sequence = searcher.findSequence(
+            mc.player.getEyePosition(), pos, tools.getPlacementSearch().get(), illegal);
+
+        if (sequence.isEmpty()) {
+            task.updateState(TaskState.IMPOSSIBLE_PLACE);
+            return;
+        }
+
+        PlacementStep step = sequence.get(sequence.size() - 1);
         task.updateState(TaskState.PENDING_PLACE);
 
-        // TODO correct block facing avoid impossible place
-//
-//        BlockPos pos = task.getBlockPos();
-//
-//        Vec3d hitPos = Vec3d.ofCenter(pos);
-//
-//        BlockPos neighbour;
-//        Direction side = BlockUtils.getPlaceSide(pos);
-//
-//        if (side == null) {
-//            side = Direction.UP;
-//            neighbour = pos;
-//        } else {
-//            neighbour = pos.offset(side);
-//            hitPos = hitPos.add(side.getOffsetX() * 0.5, side.getOffsetY() * 0.5, side.getOffsetZ() * 0.5);
-//        }
-//
-//        BlockHitResult bhr = new BlockHitResult(hitPos, side.getOpposite(), neighbour, false);
-//
-////        if (rotate) {
-////            Rotations.rotate(Rotations.getYaw(hitPos), Rotations.getPitch(hitPos), rotationPriority, () -> {
-////                InvUtils.swap(slot, swapBack);
-////
-////                interact(bhr, hand, swingHand);
-////
-////                if (swapBack) InvUtils.swapBack();
-////            });
-////        } else {
-//        InvUtils.swap(slot, false);
-//        mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, bhr, 69));
-//////        BlockUtils.interact(bhr, Hand.MAIN_HAND, true);
-////
-//////        }
+        // PURE-PACKET PLACEMENT against the found support
+        BlockHitResult bhr = new BlockHitResult(
+            step.hitVec(), step.side(), step.supportPos(), false);
 
-        BlockUtils.place(
-            task.getBlockPos(),
-            InteractionHand.MAIN_HAND,
-            slot,
-            tools.getRotation().get().place,
-            0,
-            true,
-            true,
-            false
-        );
+        // ROTATION (camera) — preserve the old rotate-camera behavior
+        if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
+            mc.player.setYRot((float) Rotations.getYaw(step.hitVec()));
+            mc.player.setXRot((float) Rotations.getPitch(step.hitVec()));
+        }
 
+        // INVENTORY — switch to the build item, then restore the previous slot after clicking
+        int previousSlot = mc.player.getInventory().getSelectedSlot();
+        mc.player.getInventory().setSelectedSlot(slot);
+
+        if (tools.getRotation().get().place) {
+            Rotations.rotate(Rotations.getYaw(step.hitVec()), Rotations.getPitch(step.hitVec()), () -> {
+                BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
+                if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
+            });
+        } else {
+            BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
+            if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
+        }
+
+        // Existing confirmation fallback (kept from current code)
         new Thread(() -> {
             try {
                 Thread.sleep(50L * tools.getTaskTimeout().get());
