@@ -5,10 +5,10 @@ import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 /**
  * @author dynmie
@@ -17,7 +17,7 @@ public class PlaceHandler {
 
     private static int extraPlaceDelay = 0;
 
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getInstance();
 
     private final HighwayTools tools;
     private final InventoryHandler inventoryHandler;
@@ -34,8 +34,8 @@ public class PlaceHandler {
 
         // ROTATION
         if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
-            mc.player.setYaw((float) Rotations.getYaw(task.getBlockPos()));
-            mc.player.setPitch((float) Rotations.getPitch(task.getBlockPos()));
+            mc.player.setYRot((float) Rotations.getYaw(task.getBlockPos()));
+            mc.player.setXRot((float) Rotations.getPitch(task.getBlockPos()));
         }
 
         // INVENTORY
@@ -86,7 +86,7 @@ public class PlaceHandler {
 
         BlockUtils.place(
             task.getBlockPos(),
-            Hand.MAIN_HAND,
+            InteractionHand.MAIN_HAND,
             slot,
             tools.getRotation().get().place,
             0,

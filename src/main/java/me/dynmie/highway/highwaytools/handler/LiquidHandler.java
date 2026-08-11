@@ -5,11 +5,11 @@ import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.LiquidUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -19,7 +19,7 @@ import java.util.Optional;
  */
 public class LiquidHandler {
 
-    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static final Minecraft client = Minecraft.getInstance();
 
     private final HighwayTools tools;
 
@@ -28,21 +28,21 @@ public class LiquidHandler {
     }
 
     public boolean handleLiquid(BlockTask task) {
-        Objects.requireNonNull(client.world, "world cannot be null; are you sure you are in a world?");
+        Objects.requireNonNull(client.level, "world cannot be null; are you sure you are in a world?");
         Objects.requireNonNull(client.player, "player cannot be null; are you sure you are in a world?");
 
         boolean liquidFound = false;
         BlockPos pos = task.getBlockPos();
 
         for (Direction side : Direction.values()) {
-            BlockPos offset = pos.offset(side);
+            BlockPos offset = pos.relative(side);
 
-            BlockState blockState = client.world.getBlockState(offset);
+            BlockState blockState = client.level.getBlockState(offset);
             if (!LiquidUtils.isLiquid(blockState)) {
                 continue;
             }
 
-            if (client.player.getEyePos().distanceTo(offset.toCenterPos()) > tools.getReach().get()) {
+            if (client.player.getEyePosition().distanceTo(offset.getCenter()) > tools.getReach().get()) {
                 task.updateState(TaskState.DONE);
                 return true;
             }

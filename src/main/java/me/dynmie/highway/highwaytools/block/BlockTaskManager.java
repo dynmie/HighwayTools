@@ -5,12 +5,12 @@ import me.dynmie.highway.highwaytools.handler.InventoryHandler;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.BlockUtils;
 import me.dynmie.highway.utils.LocationUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class BlockTaskManager {
 
-    private final MinecraftClient mc = MinecraftClient.getInstance();
+    private final Minecraft mc = Minecraft.getInstance();
 
     private final Map<BlockPos, BlockTask> blockTasks = new ConcurrentHashMap<>();
     private final Set<BlockTask> sortedTasks = new ConcurrentSkipListSet<>(getBlockTaskComparator());
@@ -46,7 +46,7 @@ public class BlockTaskManager {
         for (Map.Entry<BlockPos, BlockTask> entry : blockTasks.entrySet()) {
             if (entry.getValue().getTaskState() != TaskState.DONE) continue;
 
-            if (tools.getCurrentPosition().toCenterPos().distanceTo(entry.getKey().toCenterPos()) > tools.getReach().get() + 2) {
+            if (tools.getCurrentPosition().getCenter().distanceTo(entry.getKey().getCenter()) > tools.getReach().get() + 2) {
                 blockTasks.remove(entry.getKey());
             }
         }
@@ -56,8 +56,8 @@ public class BlockTaskManager {
     public void generateTask(BlockPos pos, BlueprintTask blueprintTask) {
         if (mc.player == null) return;
 
-        Vec3d eyePos = mc.player.getEyePos();
-        BlockState blockState = mc.player.getWorld().getBlockState(pos);
+        Vec3 eyePos = mc.player.getEyePosition();
+        BlockState blockState = mc.player.level().getBlockState(pos);
         Block currentBlock = blockState.getBlock();
 
         // padding
@@ -66,7 +66,7 @@ public class BlockTaskManager {
         }
 
 
-        if (eyePos.distanceTo(pos.toCenterPos()) >= tools.getReach().get() + 1) return;
+        if (eyePos.distanceTo(pos.getCenter()) >= tools.getReach().get() + 1) return;
 
         if (currentBlock.equals(Blocks.END_PORTAL_FRAME)
             || currentBlock.equals(Blocks.BEDROCK)
@@ -79,7 +79,7 @@ public class BlockTaskManager {
         }
 
         // place
-        if (blockState.isReplaceable() && !BlockUtils.isTypeAir(blueprintTask.getTargetBlock())) {
+        if (blockState.canBeReplaced() && !BlockUtils.isTypeAir(blueprintTask.getTargetBlock())) {
             if (!meteordevelopment.meteorclient.utils.world.BlockUtils.canPlace(pos)) {
                 BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
                 addTask(task);
@@ -152,7 +152,7 @@ public class BlockTaskManager {
     public void addTask(BlockTask blockTask) {
         BlockTask otherTask = blockTasks.get(blockTask.getBlockPos());
         if (otherTask == null) {
-            blockTasks.put(blockTask.getBlockPos().mutableCopy(), blockTask);
+            blockTasks.put(blockTask.getBlockPos().mutable(), blockTask);
             return;
         }
 
@@ -160,7 +160,7 @@ public class BlockTaskManager {
             || otherTask.getTaskState() != blockTask.getTaskState()
             && (otherTask.getTaskState() == TaskState.DONE || otherTask.getTaskState() == TaskState.PLACE)
         ) {
-            blockTasks.put(blockTask.getBlockPos().mutableCopy(), blockTask);
+            blockTasks.put(blockTask.getBlockPos().mutable(), blockTask);
 //            tools.info(blockTask.getTaskState()  + "");
         }
 
@@ -181,7 +181,7 @@ public class BlockTaskManager {
                 if (tools.getShuffle().get()) {
                     return Integer.compare(a.getShuffle(), b.getShuffle());
                 }
-                return Double.compare(tools.getStart().distanceTo(a.getBlockPos().toCenterPos()), tools.getStart().distanceTo(b.getBlockPos().toCenterPos()));
+                return Double.compare(tools.getStart().distanceTo(a.getBlockPos().getCenter()), tools.getStart().distanceTo(b.getBlockPos().getCenter()));
             }).thenComparing(BlockTask::getEyeDistance);
     }
 
