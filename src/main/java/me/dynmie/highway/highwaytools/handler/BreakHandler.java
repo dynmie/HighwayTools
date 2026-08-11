@@ -41,12 +41,14 @@ public class BreakHandler {
             return;
         }
 
-        mc.player.getInventory().setSelectedSlot(inventoryHandler.prepareToolInHotbar(blockState));
+        // select the best tool for this block and hold it for the whole mine
+        int slot = inventoryHandler.prepareToolInHotbar(blockState);
+        mc.player.getInventory().setSelectedSlot(slot);
 
-        int slot = mc.player.getInventory().getSelectedSlot();
         TaskState state = task.getTaskState();
 
         if (state == TaskState.BREAK) {
+            // start mining: mark the START tick once, send the start packet
             task.updateState(TaskState.BREAKING);
             task.setStartMineTick(mc.player.tickCount);
 
@@ -59,9 +61,13 @@ public class BreakHandler {
             }
             swingHand();
         } else if (state == TaskState.BREAKING) {
-            double progress = BlockUtils.getBreakDelta(slot, blockState) * (mc.player.tickCount - task.getStartMineTick() + 1);
+            // per-task progress: getDestroyProgress already accounts for the held tool,
+            // so the break time is deterministic from the start tick — no shared state.
+            int elapsed = mc.player.tickCount - task.getStartMineTick();
+            int ticksNeeded = calcTicksToBreakBlock(pos, blockState);
+
             boolean creative = mc.player.getAbilities().instabuild;
-            boolean ready = progress >= 1 || creative;
+            boolean ready = creative || elapsed >= ticksNeeded;
 
             if (ready) {
                 sendStopPacket(pos, direction(pos));
@@ -74,7 +80,7 @@ public class BreakHandler {
                     mc.player.getInventory().setSelectedSlot(prev);
                 }
                 task.updateState(TaskState.PENDING_BREAK);
-            } else if (mc.player.tickCount - task.getStartMineTick() > 10) {
+            } else if (elapsed > 10) {
                 // progress stalled for 10+ ticks — re-send START to unstick the dig
                 sendStartPacket(pos, direction(pos));
                 swingHand();
@@ -82,6 +88,14 @@ public class BreakHandler {
                 swingHand();
             }
         }
+    }
+
+    /**
+     * The number of game ticks to break a block with the currently held tool.
+     * Equivalent to the base addon's {@code calcTicksToBreakBlock}.
+     */
+    public static int calcTicksToBreakBlock(BlockPos pos, BlockState state) {
+        return (int) Math.ceil(1 / state.getDestroyProgress(mc.player, mc.level, pos));
     }
 
     private Direction direction(BlockPos pos) {
