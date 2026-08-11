@@ -9,6 +9,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 /**
  * @author dynmie
@@ -48,9 +50,18 @@ public class PlaceHandler {
         }
 
         // PLACEMENT
+        BlockPos pos = task.getBlockPos();
+        Direction side = BlockUtils.getPlaceSide(pos);
+
+        // Impossible place
+        if (side == null) {
+//            task.updateState(TaskState.DONE);
+            return;
+        }
+
         task.updateState(TaskState.PENDING_PLACE);
 
-//         TODO correct block facing avoid impossible place
+        // TODO correct block facing avoid impossible place
 //
 //        BlockPos pos = task.getBlockPos();
 //

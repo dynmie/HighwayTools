@@ -122,6 +122,7 @@ public class BlockTaskManager {
     }
 
     public void runTasks() {
+        // timing should not delay if next block is BREAK or !PLACE
         if (inventoryHandler.getWaitTicks() > 1) {
             inventoryHandler.decreaseWaitTicks(1);
             return;

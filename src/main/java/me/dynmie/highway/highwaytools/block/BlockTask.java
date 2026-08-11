@@ -57,6 +57,10 @@ public class BlockTask {
         if (ranTicks > taskState.getStuckThreshold()) {
             stuckTicks++;
         }
+
+        switch (taskState) {
+
+        }
     }
 
     public void onStuck() {
