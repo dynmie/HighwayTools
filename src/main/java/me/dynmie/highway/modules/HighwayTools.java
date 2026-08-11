@@ -298,6 +298,22 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Boolean> illegalPlacements = sgPlace.add(new BoolSetting.Builder()
+        .name("illegal-placements")
+        .description("Click block faces that are not visible to the player to place blocks in impossible positions. Not recommended on strict anti-cheat servers.")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Integer> placementSearch = sgPlace.add(new IntSetting.Builder()
+        .name("placement-search")
+        .description("How many blocks deep to search for a placement support.")
+        .defaultValue(2)
+        .range(1, 6)
+        .sliderRange(1, 6)
+        .build()
+    );
+
     // Debug
 
     private final Setting<Boolean> renderGoalPos = sgDebug.add(new BoolSetting.Builder()
@@ -684,5 +700,13 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getRotateCamera() {
         return rotateCamera;
+    }
+
+    public Setting<Boolean> getIllegalPlacements() {
+        return illegalPlacements;
+    }
+
+    public Setting<Integer> getPlacementSearch() {
+        return placementSearch;
     }
 }
