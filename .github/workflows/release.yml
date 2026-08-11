@@ -1,5 +1,6 @@
-# Manual release: click "Run workflow", type a version (e.g. 0.2.0-pre.1 or 0.2.0),
-# and this builds exactly that version and publishes a GitHub release.
+# Manual full release: click "Run workflow", pick the commit/branch to release
+# (via "Use workflow from"), and it builds that commit as the given version and
+# publishes v<version>. Defaults to 0.2.0 for a non-prerelease release.
 
 name: Release
 
@@ -7,8 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, e.g. 0.2.0-pre.1 (tag becomes v0.2.0-pre.1)'
+        description: 'Version to release, e.g. 0.2.0 (tag becomes v0.2.0)'
         required: true
+        default: '0.2.0'
         type: string
 
 permissions:
@@ -46,3 +48,4 @@ jobs:
         files: build/libs/*.jar
         generate_release_notes: true
         prerelease: ${{ contains(inputs.version, '-pre') }}
+        target_commitish: ${{ github.sha }}
