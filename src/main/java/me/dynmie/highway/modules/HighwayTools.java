@@ -493,25 +493,11 @@ public class HighwayTools extends Module {
             return;
         }
 
-        // [HT-DIAG] does onTick actually fire every tick?
-        if (mc.player != null && mc.player.tickCount % 20 == 0) {
-            System.out.println("[HT-DIAG] ONTICK t=" + mc.player.tickCount
-                + " tasks=" + blockTaskManager.getBlockTasks().size());
-        }
-
         blockTaskManager.updateTasks();
 
         Runnable runnable;
         while ((runnable = runnableQueue.poll()) != null) {
             runnable.run();
-        }
-
-        // [HT-DIAG] is runTasks being reached every tick, or is checkForPause gating it?
-        if (mc.player != null && mc.player.tickCount % 20 == 0) {
-            boolean paused = checkForPause();
-            System.out.println("[HT-DIAG] PRECHECK t=" + mc.player.tickCount + " paused=" + paused
-                + (paused ? " autoEat=" + Modules.get().get(AutoEat.class).eating
-                           + " autoGap=" + Modules.get().get(AutoGap.class).isEating() : ""));
         }
 
         if (checkForPause()) return;

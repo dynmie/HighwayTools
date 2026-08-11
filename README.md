@@ -35,17 +35,14 @@ Created because the current highway tools built into Meteor is just plain terrib
 - [ ] Restock from shulker boxes and ender chests
 - [ ] Grind obsidian from ender chests
 - [ ] Save minimum amount of materials
-- [ ] Choose best tool to mine block by score
-- [ ] Ignore a list of blocks to avoid breaking them
+- [x] Choose best tool to mine block by score
+- [x] Ignore a list of blocks to avoid breaking them
 - [x] Highway, Tunnel, and Flat blueprint modes
 - [ ] Corner blocks
-- [ ] Intelligent placing by block side
-- [ ] Deep search for placing
-- [ ] Scaffold/bridge if block side view is not visible
-- [ ] Option for impossible placements 
-
-## Known issues
-- Tools not in your hotbar will not be used
+- [x] Intelligent placing by block side
+- [x] Deep search for placing
+- [x] Scaffold/bridge if block side view is not visible
+- [x] Option for impossible placements
 
 ## Contributing
 If you would like to contribute, create a pull request!

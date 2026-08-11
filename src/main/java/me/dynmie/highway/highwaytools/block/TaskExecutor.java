@@ -315,11 +315,8 @@ public class TaskExecutor {
 
         // server confirmed the break — block became air
         if (me.dynmie.highway.utils.BlockUtils.isTypeAir(state.getBlock())) {
-            // [HT-DIAG] ack landed -> block is air
-            System.out.println("[HT-DIAG] PENDING_BREAK -> air (ack ok) " + task.getBlockPos()
-                + " stuck=" + task.getStuckTicks());
             // The tool stays held through the whole break (see BreakHandler) and is only
-            // released when the next task swaps it away (e.g. PlaceHandler's swap/swapBack).
+            // released when the next task swaps it away (e.g. PlaceHandler's swap).
             // No swapBack here: with several tasks waiting in PENDING_BREAK, restoring one
             // would swap the tool away mid-break for another.
             task.updateState(TaskState.BROKEN);
@@ -330,9 +327,6 @@ public class TaskExecutor {
 
         // server never confirmed — give up and re-mine
         if (task.getStuckTicks() >= task.getTaskState().getStuckTimeout()) {
-            // [HT-DIAG] ack NEVER landed -> re-mine (this is the slow path if it fires a lot)
-            System.out.println("[HT-DIAG] PENDING_BREAK TIMEOUT -> BREAK (ack missing) "
-                + task.getBlockPos() + " state=" + state.getBlock());
             task.updateState(TaskState.BREAK);
         }
     }

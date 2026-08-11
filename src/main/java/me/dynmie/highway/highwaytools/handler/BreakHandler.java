@@ -60,13 +60,6 @@ public class BreakHandler {
             boolean creative = mc.player.getAbilities().instabuild;
             boolean insta = creative || BlockUtils.canInstaBreak(pos);
 
-            // [HT-DIAG] ground truth: every block that starts a dig
-            System.out.println("[HT-DIAG] BREAK start " + pos + " creative=" + creative
-                + " insta=" + insta
-                + " held=" + (mc.player.getMainHandItem().isEmpty() ? "EMPTY" : mc.player.getMainHandItem().getItem())
-                + " slot=" + mc.player.getInventory().getSelectedSlot()
-                + " waitTicks=" + inventoryHandler.getWaitTicks());
-
             if (insta) {
                 // INSTANT (creative or insta-mine): mirrors Lambda's mineBlockInstant —
                 // send START (server does creative destroyAndAck) and go PENDING_BREAK.
@@ -92,16 +85,8 @@ public class BreakHandler {
             int elapsed = mc.player.tickCount - task.getStartMineTick();
             double progress = delta * elapsed;
 
-            // [HT-DIAG] survival progress (every 10 ticks)
-            if (elapsed % 10 == 0) {
-                System.out.println("[HT-DIAG] BREAKING " + pos + " delta=" + String.format("%.4f", delta)
-                    + " elapsed=" + elapsed + " progress=" + String.format("%.3f", progress)
-                    + " held=" + (mc.player.getMainHandItem().isEmpty() ? "EMPTY" : mc.player.getMainHandItem().getItem()));
-            }
-
             if (progress >= 1.0) {
                 // finished: send STOP to complete the dig; the server applies the air.
-                System.out.println("[HT-DIAG] BREAKING done -> STOP " + pos + " progress=" + String.format("%.3f", progress));
                 sendStopPacket(pos, direction(pos));
                 swingHand();
                 task.updateState(TaskState.BROKEN);
