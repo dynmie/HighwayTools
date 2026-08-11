@@ -69,7 +69,14 @@ public class BreakHandler {
         if (state == TaskState.BREAK) {
             task.updateState(TaskState.BREAKING);
             task.setStartMineTick(mc.player.tickCount);
+
+            boolean creative = mc.player.getAbilities().instabuild;
+            boolean insta = creative || BlockUtils.canInstaBreak(pos);
             sendStartPacket(pos, direction(pos));
+            if (insta) {
+                sendStopPacket(pos, direction(pos));
+                task.updateState(TaskState.PENDING_BREAK);
+            }
             swingHand();
         } else if (state == TaskState.BREAKING) {
             double progress = BlockUtils.getBreakDelta(slot, blockState) * (mc.player.tickCount - task.getStartMineTick() + 1);
