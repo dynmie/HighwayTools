@@ -24,9 +24,10 @@
     "meteor-client:color": "225,25,25"
   },
   "depends": {
-    "java": ">=17",
+    "java": ">=25",
     "minecraft": ">=${mc_version}",
     "meteor-client": "*",
-    "baritone": "*"
+    "baritone-meteor": "*",
+    "fabricloader": ">=0.19.2"
   }
 }
