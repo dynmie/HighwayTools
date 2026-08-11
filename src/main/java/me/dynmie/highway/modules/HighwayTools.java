@@ -9,6 +9,7 @@ import me.dynmie.highway.highwaytools.blueprint.BlueprintGenerator;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
 import me.dynmie.highway.highwaytools.handler.BreakHandler;
 import me.dynmie.highway.highwaytools.handler.InventoryHandler;
+import me.dynmie.highway.highwaytools.handler.InventoryManager;
 import me.dynmie.highway.highwaytools.handler.LiquidHandler;
 import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.highwaytools.pathing.BaritoneHelper;
@@ -370,6 +371,7 @@ public class HighwayTools extends Module {
 
     private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
 
+    private final InventoryManager inventoryManager = new InventoryManager(this);
     private final InventoryHandler inventoryHandler = new InventoryHandler(this);
     private final BreakHandler breakHandler = new BreakHandler(this, inventoryHandler);
     private final LiquidHandler liquidHandler = new LiquidHandler(this);
@@ -728,6 +730,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getRotateCamera() {
         return rotateCamera;
+    }
+
+    public InventoryManager getInventoryManager() {
+        return inventoryManager;
     }
 
     public Setting<Integer> getSaveMaterial() {
