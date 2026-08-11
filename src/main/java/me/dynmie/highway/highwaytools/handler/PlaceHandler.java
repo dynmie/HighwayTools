@@ -5,6 +5,7 @@ import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.highwaytools.place.PlacementSearcher;
 import me.dynmie.highway.highwaytools.place.PlacementStep;
 import me.dynmie.highway.modules.HighwayTools;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.Minecraft;
@@ -74,18 +75,18 @@ public class PlaceHandler {
             mc.player.setXRot((float) Rotations.getPitch(step.hitVec()));
         }
 
-        // INVENTORY — switch to the build item, then restore the previous slot after clicking
-        int previousSlot = mc.player.getInventory().getSelectedSlot();
-        mc.player.getInventory().setSelectedSlot(slot);
+        // INVENTORY — switch to the build item (InvUtils.swap syncs the held item to the
+        // server), then restore the previous slot after clicking
+        InvUtils.swap(slot, true);
 
         if (tools.getRotation().get().place) {
             Rotations.rotate(Rotations.getYaw(step.hitVec()), Rotations.getPitch(step.hitVec()), () -> {
                 BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
-                if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
+                InvUtils.swapBack();
             });
         } else {
             BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
-            if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
+            InvUtils.swapBack();
         }
 
         // Existing confirmation fallback (kept from current code)
