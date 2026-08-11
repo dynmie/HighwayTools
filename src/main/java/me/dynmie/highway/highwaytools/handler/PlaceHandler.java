@@ -76,18 +76,17 @@ public class PlaceHandler {
             mc.player.setXRot((float) Rotations.getPitch(step.hitVec()));
         }
 
-        // INVENTORY — switch to the build item (InvUtils.swap syncs the held item to the
-        // server), then restore the previous slot after clicking
-        InvUtils.swap(slot, true);
+        // INVENTORY — switch to the build item and keep it. The bot controls the hotbar, so
+        // there is no swapBack: once we select obsidian it stays selected until the next
+        // action (mine or place) swaps to what it needs.
+        InvUtils.swap(slot, false);
 
         if (tools.getRotation().get().place) {
             Rotations.rotate(Rotations.getYaw(step.hitVec()), Rotations.getPitch(step.hitVec()), () -> {
                 BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
-                InvUtils.swapBack();
             });
         } else {
             BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
-            InvUtils.swapBack();
         }
 
         // Existing confirmation fallback (kept from current code)

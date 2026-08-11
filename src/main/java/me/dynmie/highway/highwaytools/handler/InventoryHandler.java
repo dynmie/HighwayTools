@@ -45,6 +45,16 @@ public class InventoryHandler {
         waitTicks -= ticks;
     }
 
+    /**
+     * Finds (and, if not already there, moves into the hotbar) an item and returns the
+     * hotbar slot (0-8) that now holds it.
+     *
+     * <p>The returned slot is what the caller must pass to {@link InvUtils#swap} so the
+     * correct stack is held when the placement packet is sent. Using a wrong hotbar index
+     * here makes the bot place a different block than the one it just swapped (e.g. it
+     * moves obsidian into the hotbar but holds netherrack because the selected slot was
+     * never the one the item landed in).
+     */
     public int prepareItemInHotbar(Item item) {
         FindItemResult itemResult = InvUtils.find(item);
 
@@ -54,31 +64,38 @@ public class InventoryHandler {
             return -1;
         }
 
-        int slot = itemResult.slot();
-
-        if (!itemResult.isHotbar()) {
-            int bestSlot = findFreeHotbarSlot();
-
-            InvUtils.move().from(slot).to(bestSlot);
-
-            slot = bestSlot;
+        // Item already in the hotbar: use its slot directly.
+        if (itemResult.isHotbar()) {
+            return itemResult.slot();
         }
 
-        return slot;
+        // Item is in the main inventory (slots 0-35 in the container model that
+        // InvUtils.find uses, but these are NOT the same as the hotbar 0-8 indices).
+        // Move it to a free hotbar slot and return that hotbar index.
+        int sourceSlot = itemResult.slot();
+        int hotbarSlot = findFreeHotbarSlot();
+
+        // from() expects the container index (0-35 main, 36-44 hotbar) that InvUtils.find
+        // used; to() converts the hotbar index 0-8 to the container id. This move does NOT
+        // change the selected slot.
+        InvUtils.move().from(sourceSlot).toHotbar(hotbarSlot);
+
+        return hotbarSlot;
     }
 
     public int findFreeHotbarSlot() {
         Objects.requireNonNull(client.player, "player cannot be null");
 
-        FindItemResult hotbarResult = InvUtils.find(ItemStack::isEmpty, 0, 8);
+        // Empty hotbar slot (indices 0-8). Fall back to the slot right of the current
+        // selection so the moved item is close at hand.
+        for (int i = 0; i < 9; i++) {
+            if (client.player.getInventory().getItem(i).isEmpty()) {
+                return i;
+            }
+        }
 
         int bestSlot = client.player.getInventory().getSelectedSlot() + 1;
         if (bestSlot > 8) bestSlot = 0;
-
-        if (hotbarResult.found() && !InvUtils.testInMainHand(ItemStack::isEmpty)) {
-            bestSlot = hotbarResult.slot();
-        }
-
         return bestSlot;
     }
 
@@ -123,10 +140,10 @@ public class InventoryHandler {
      *
      * <p>Uses {@link InvUtils#swap} instead of a bare {@code setSelectedSlot}: the swap
      * also calls {@code meteor$syncSelected()} ({@code ensureHasSentCarriedItem}) so the
-     * server learns the newly held item, and it records the previous slot for later
-     * {@link InvUtils#swapBack} restore. Without the sync the server keeps breaking at the
+     * server learns the newly held item. Without the sync the server keeps breaking at the
      * speed of the previously held slot, making mining appear much slower than the client
-     * predicts.
+     * predicts. No swapBack — the bot controls the hotbar and keeps the tool held until the
+     * next action swaps it away.
      *
      * @param state The block state to calculate the best tool.
      * @return The slot with the best item.
@@ -148,7 +165,7 @@ public class InventoryHandler {
             slot = bestSlot;
         }
 
-        InvUtils.swap(slot, true);
+        InvUtils.swap(slot, false);
         return slot;
     }
 
