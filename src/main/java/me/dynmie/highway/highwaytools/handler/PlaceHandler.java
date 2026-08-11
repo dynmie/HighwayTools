@@ -56,6 +56,7 @@ public class PlaceHandler {
         boolean illegal = tools.getIllegalPlacements().get();
         List<PlacementStep> sequence = searcher.findSequence(
             mc.player.getEyePosition(), pos, tools.getPlacementSearch().get(), illegal);
+        task.setSequence(sequence);
 
         if (sequence.isEmpty()) {
             task.updateState(TaskState.IMPOSSIBLE_PLACE);

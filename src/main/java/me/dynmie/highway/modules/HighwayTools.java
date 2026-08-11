@@ -214,6 +214,22 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Boolean> scaffold = sgGeneral.add(new BoolSetting.Builder()
+        .name("scaffold")
+        .description("Walk forward onto the built floor when the next front column has no reachable line-of-sight (Trombone-style bridging).")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Double> moveSpeed = sgGeneral.add(new DoubleSetting.Builder()
+        .name("move-speed")
+        .description("Movement speed used while bridging.")
+        .defaultValue(0.2d)
+        .min(0.01d)
+        .sliderMax(0.5d)
+        .build()
+    );
+
     // Mine
 
     private final Setting<Boolean> preferSilkTouch = sgMine.add(new BoolSetting.Builder()
@@ -490,6 +506,11 @@ public class HighwayTools extends Module {
         blockTaskManager.runTasks();
     }
 
+    @EventHandler
+    private void onPlayerMove(meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent event) {
+        pathfinder.handleMove(event);
+    }
+
     public boolean checkForPause() {
         if (Modules.get().get(AutoEat.class).eating) return true;
         if (Modules.get().get(AutoGap.class).isEating()) return true;
@@ -657,6 +678,14 @@ public class HighwayTools extends Module {
 
     public Setting<Integer> getDistance() {
         return distance;
+    }
+
+    public Setting<Boolean> getScaffold() {
+        return scaffold;
+    }
+
+    public Setting<Double> getMoveSpeed() {
+        return moveSpeed;
     }
 
     public Setting<Boolean> getPreferSilkTouch() {
