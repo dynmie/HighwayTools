@@ -203,6 +203,15 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Integer> distance = sgGeneral.add(new IntSetting.Builder()
+        .name("distance")
+        .description("Stop the bot after this many blocks along the highway direction. 0 = unlimited.")
+        .defaultValue(0)
+        .min(0)
+        .sliderMax(5000)
+        .build()
+    );
+
     // Mine
 
     private final Setting<Boolean> preferSilkTouch = sgMine.add(new BoolSetting.Builder()
@@ -579,6 +588,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getDisconnectOnToggle() {
         return disconnectOnToggle;
+    }
+
+    public Setting<Integer> getDistance() {
+        return distance;
     }
 
     public Setting<Boolean> getPreferSilkTouch() {

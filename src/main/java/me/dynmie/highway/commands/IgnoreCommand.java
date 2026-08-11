@@ -1,5 +1,6 @@
 package me.dynmie.highway.commands;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.commands.Command;
@@ -40,6 +41,18 @@ public class IgnoreCommand extends Command {
                 .executes(context -> {
                     info("Ignored blocks: " + tools.getIgnoreList().getBlocks());
                     return SINGLE_SUCCESS;
-                }));
+                }))
+            .then(literal("distance")
+                .executes(context -> {
+                    info("Distance limit: (highlight)%d", tools.getDistance().get());
+                    return SINGLE_SUCCESS;
+                })
+                .then(argument("blocks", IntegerArgumentType.integer(0))
+                    .executes(context -> {
+                        int blocks = context.getArgument("blocks", Integer.class);
+                        tools.getDistance().set(blocks);
+                        info("Distance limit set to (highlight)%d%s", blocks, blocks == 0 ? " (unlimited)." : " blocks.");
+                        return SINGLE_SUCCESS;
+                    })));
     }
 }

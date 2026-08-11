@@ -47,6 +47,16 @@ public class BaritonePathfinder {
 
         BlockPos nextPos = tools.getCurrentPosition().offset(DirectionUtils.toVec3i(tools.getDirection()));
 
+        int maxDistance = tools.getDistance().get();
+        if (maxDistance > 0) {
+            double traveled = nextPos.getCenter().distanceTo(tools.getStartPosition().getCenter());
+            if (traveled >= maxDistance) {
+                // reached the limit — stop advancing; the module will be toggled off
+                tools.runNextTick(() -> tools.toggle());
+                return;
+            }
+        }
+
 //        BlockState upState = mc.level.getBlockState(nextPos.above());
 //        BlockState midState = mc.level.getBlockState(nextPos);
 //        BlockState downState = mc.level.getBlockState(nextPos.below());
