@@ -86,9 +86,31 @@ public class PlacementSearcher {
         return new PlacementStep(supportPos, clickSide, hitVec, target);
     }
 
+    /**
+     * Lambda HT's "visible side" check (ported): a block face is visible if the player's
+     * eye is more than 0.5 blocks past that face on its axis, i.e. the face points at the
+     * player. Y is treated as "both sides visible" whenever the eye is within range, exactly
+     * like Lambda's {@code checkAxis(..., bothIfInRange = true)} for the vertical axis.
+     *
+     * <p>This is the true line-of-sight requirement for non-impossible placements: the clicked
+     * face must be on the side of the support block that faces the player. When {@code illegal}
+     * placements are enabled the caller skips this check entirely.
+     */
     private boolean isFaceVisible(BlockPos supportPos, Direction side) {
-        // Conservative: the face is visible if the adjacent block (supportPos offset by side) is air or replaceable.
-        BlockState adj = mc.level.getBlockState(supportPos.relative(side));
-        return adj.isAir() || adj.canBeReplaced();
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 center = Vec3.atCenterOf(supportPos);
+        double diffX = eye.x() - center.x();
+        double diffZ = eye.z() - center.z();
+
+        return switch (side.getAxis()) {
+            case X -> side.getAxisDirection() == Direction.AxisDirection.POSITIVE
+                ? diffX > 0.5
+                : diffX < -0.5;
+            case Z -> side.getAxisDirection() == Direction.AxisDirection.POSITIVE
+                ? diffZ > 0.5
+                : diffZ < -0.5;
+            // vertical faces are always "visible" (both up and down), matching Lambda
+            case Y -> true;
+        };
     }
 }
