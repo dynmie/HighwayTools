@@ -40,12 +40,6 @@ public class PlaceHandler {
         int delay = tools.getAdaptivePlaceDelay().get() ? tools.getPlaceDelay().get() + extraPlaceDelay : tools.getPlaceDelay().get();
         inventoryHandler.setWaitTicks(delay);
 
-        // ROTATION
-        if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
-            mc.player.setYRot((float) Rotations.getYaw(task.getBlockPos()));
-            mc.player.setXRot((float) Rotations.getPitch(task.getBlockPos()));
-        }
-
         // INVENTORY
         Item itemToFind = task.getBlueprintTask().getTargetBlock().asItem();
         itemToFind = itemToFind.equals(Items.AIR) ? tools.getFillerBlock().get().asItem() : itemToFind;
@@ -74,14 +68,24 @@ public class PlaceHandler {
         BlockHitResult bhr = new BlockHitResult(
             step.hitVec(), step.side(), step.supportPos(), false);
 
+        // ROTATION (camera) — preserve the old rotate-camera behavior
+        if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
+            mc.player.setYRot((float) Rotations.getYaw(step.hitVec()));
+            mc.player.setXRot((float) Rotations.getPitch(step.hitVec()));
+        }
+
+        // INVENTORY — switch to the build item, then restore the previous slot after clicking
+        int previousSlot = mc.player.getInventory().getSelectedSlot();
         mc.player.getInventory().setSelectedSlot(slot);
 
         if (tools.getRotation().get().place) {
             Rotations.rotate(Rotations.getYaw(step.hitVec()), Rotations.getPitch(step.hitVec()), () -> {
                 BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
+                if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
             });
         } else {
             BlockUtils.interact(bhr, InteractionHand.MAIN_HAND, true);
+            if (mc.player != null) mc.player.getInventory().setSelectedSlot(previousSlot);
         }
 
         // Existing confirmation fallback (kept from current code)
