@@ -66,6 +66,7 @@ public class HighwayTools extends Module {
     private final SettingGroup sgMine = settings.createGroup("Mine");
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
+    private final SettingGroup sgStorage = settings.createGroup("Storage Management");
 
     // General
 
@@ -312,6 +313,49 @@ public class HighwayTools extends Module {
         .description("Render the generated blueprint.")
         .defaultValue(false)
         .build()
+    );
+
+    // Storage Management
+
+    private final Setting<Integer> saveMaterial = sgStorage.add(new IntSetting.Builder()
+        .name("save-material")
+        .description("Never use the last N material blocks (restock when at/below).")
+        .defaultValue(64).range(0, 1728).sliderRange(0, 1728).build()
+    );
+    private final Setting<Integer> saveTools = sgStorage.add(new IntSetting.Builder()
+        .name("save-tools")
+        .description("Restock pickaxes when at/below this many.")
+        .defaultValue(1).range(0, 8).sliderRange(0, 8).build()
+    );
+    private final Setting<Integer> saveEnder = sgStorage.add(new IntSetting.Builder()
+        .name("save-ender")
+        .description("Keep this many ender chests before grinding/breaking extras.")
+        .defaultValue(1).range(0, 16).sliderRange(0, 16).build()
+    );
+    private final Setting<Boolean> grindObsidian = sgStorage.add(new BoolSetting.Builder()
+        .name("grind-obsidian")
+        .description("Grind obsidian from ender chests (AutoObsidian).")
+        .defaultValue(false).build()
+    );
+    private final Setting<Boolean> restockFromEnderChest = sgStorage.add(new BoolSetting.Builder()
+        .name("restock-from-ender-chest")
+        .description("Pull material from ender chests when no shulker has it.")
+        .defaultValue(true).build()
+    );
+    private final Setting<Integer> keepFreeSlots = sgStorage.add(new IntSetting.Builder()
+        .name("keep-free-slots")
+        .description("Keep this many inventory slots empty during restock.")
+        .defaultValue(2).range(0, 8).sliderRange(0, 8).build()
+    );
+    private final Setting<Boolean> leaveEmptyShulkers = sgStorage.add(new BoolSetting.Builder()
+        .name("leave-empty-shulkers")
+        .description("Close and skip shulkers that are empty.")
+        .defaultValue(true).build()
+    );
+    private final Setting<Boolean> preferEnderChests = sgStorage.add(new BoolSetting.Builder()
+        .name("prefer-ender-chests")
+        .description("Prefer ender chests over shulkers for obsidian.")
+        .defaultValue(false).build()
     );
 
     private HorizontalDirection direction = HorizontalDirection.North;
@@ -684,5 +728,37 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getRotateCamera() {
         return rotateCamera;
+    }
+
+    public Setting<Integer> getSaveMaterial() {
+        return saveMaterial;
+    }
+
+    public Setting<Integer> getSaveTools() {
+        return saveTools;
+    }
+
+    public Setting<Integer> getSaveEnder() {
+        return saveEnder;
+    }
+
+    public Setting<Boolean> getGrindObsidian() {
+        return grindObsidian;
+    }
+
+    public Setting<Boolean> getRestockFromEnderChest() {
+        return restockFromEnderChest;
+    }
+
+    public Setting<Integer> getKeepFreeSlots() {
+        return keepFreeSlots;
+    }
+
+    public Setting<Boolean> getLeaveEmptyShulkers() {
+        return leaveEmptyShulkers;
+    }
+
+    public Setting<Boolean> getPreferEnderChests() {
+        return preferEnderChests;
     }
 }
