@@ -259,7 +259,22 @@ public class TaskExecutor {
     }
 
     private void doPendingBreak(BlockTask task) {
+        if (mc.level == null || mc.player == null) return;
+
+        BlockState state = mc.level.getBlockState(task.getBlockPos());
+
+        // server confirmed the break — block became air
+        if (me.dynmie.highway.utils.BlockUtils.isTypeAir(state.getBlock())) {
+            task.updateState(TaskState.BROKEN);
+            return;
+        }
+
         task.onStuck();
+
+        // server never confirmed — give up and re-mine
+        if (task.getStuckTicks() >= task.getTaskState().getStuckTimeout()) {
+            task.updateState(TaskState.BREAK);
+        }
     }
 
     private void doPendingPlace(BlockTask task) {
