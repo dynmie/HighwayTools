@@ -417,7 +417,11 @@ public class HighwayTools extends Module {
         }
 
         blockTaskManager.updateTasks();
-        runnableQueue.forEach(Runnable::run);
+
+        Runnable runnable;
+        while ((runnable = runnableQueue.poll()) != null) {
+            runnable.run();
+        }
 
         if (checkForPause()) return;
 

@@ -23,6 +23,7 @@ public class BaritonePathfinder {
     }
 
     public void updatePathing() {
+        if (!tools.isActive()) return;
         if (mc.player == null || mc.level == null) return;
 
         if (goal == null) {
