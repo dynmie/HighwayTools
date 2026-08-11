@@ -89,6 +89,10 @@ public class BreakHandler {
                 if (!tools.getAvoidMineGhostBlocks().get()) {
                     BlockUtils.breakBlock(pos, true);
                 }
+                int prev = inventoryHandler.getPreviousSlot();
+                if (prev != -1) {
+                    mc.player.getInventory().setSelectedSlot(prev);
+                }
                 task.updateState(TaskState.PENDING_BREAK);
             } else if (mc.player.tickCount - task.getStartMineTick() > 10) {
                 // progress stalled for 10+ ticks — re-send START to unstick the dig

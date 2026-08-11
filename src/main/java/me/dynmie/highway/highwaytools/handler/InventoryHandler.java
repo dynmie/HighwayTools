@@ -24,6 +24,7 @@ public class InventoryHandler {
     private final HighwayTools tools;
 
     private int waitTicks = 0;
+    private int previousSlot = -1;
 
     public InventoryHandler(HighwayTools tools) {
         this.tools = tools;
@@ -31,6 +32,10 @@ public class InventoryHandler {
 
     public int getWaitTicks() {
         return waitTicks;
+    }
+
+    public int getPreviousSlot() {
+        return previousSlot;
     }
 
     public void setWaitTicks(int waitTicks) {
@@ -138,6 +143,9 @@ public class InventoryHandler {
             slot = bestSlot;
         }
 
+        int prev = mc.player.getInventory().getSelectedSlot();
+        mc.player.getInventory().setSelectedSlot(slot);
+        previousSlot = prev;
         return slot;
     }
 
