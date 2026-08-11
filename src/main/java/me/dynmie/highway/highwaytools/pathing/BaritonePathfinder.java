@@ -5,14 +5,14 @@ import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.DirectionUtils;
 import me.dynmie.highway.utils.LocationUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 
 import java.util.Map;
 
 public class BaritonePathfinder {
 
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getInstance();
 
     private final HighwayTools tools;
 
@@ -23,7 +23,7 @@ public class BaritonePathfinder {
     }
 
     public void updatePathing() {
-        if (mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         if (goal == null) {
             goal = tools.getCurrentPosition();
@@ -41,23 +41,23 @@ public class BaritonePathfinder {
 
         }
 
-        if (mc.player.getPos().distanceTo(tools.getCurrentPosition().toCenterPos()) > 2) {
+        if (mc.player.position().distanceTo(tools.getCurrentPosition().getCenter()) > 2) {
             return;
         }
 
-        BlockPos nextPos = tools.getCurrentPosition().add(DirectionUtils.toVec3i(tools.getDirection()));
+        BlockPos nextPos = tools.getCurrentPosition().offset(DirectionUtils.toVec3i(tools.getDirection()));
 
-//        BlockState upState = mc.world.getBlockState(nextPos.up());
-//        BlockState midState = mc.world.getBlockState(nextPos);
-//        BlockState downState = mc.world.getBlockState(nextPos.down());
+//        BlockState upState = mc.level.getBlockState(nextPos.above());
+//        BlockState midState = mc.level.getBlockState(nextPos);
+//        BlockState downState = mc.level.getBlockState(nextPos.below());
 
 //        if (!upState.isAir()) return;
 //        if (!midState.isAir()) return;
-//        if (downState.isReplaceable()) return;
+//        if (downState.canBeReplaced()) return;
 
-        if (!isDone(nextPos.up())) return;
+        if (!isDone(nextPos.above())) return;
         if (!isDone(nextPos)) return;
-        if (!isDone(nextPos.down())) return;
+        if (!isDone(nextPos.below())) return;
 
 
         tools.setCurrentPosition(nextPos);

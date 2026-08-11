@@ -4,9 +4,9 @@ import me.dynmie.highway.highwaytools.blueprint.impl.DiagonalBlueprintProvider;
 import me.dynmie.highway.highwaytools.blueprint.impl.StraightBlueprintProvider;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.DirectionUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.BlockPos;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class BlueprintGenerator {
         double reach = Math.ceil(tools.getReach().get().floatValue());
 
         for (int r = (int) Math.floor(-reach) * 5; r <= (int) Math.ceil(reach) * 5; r++) {
-            BlockPos pos = currentPosition.add(DirectionUtils.toVec3i(tools.getDirection()).multiply(r));
+            BlockPos pos = currentPosition.offset(DirectionUtils.toVec3i(tools.getDirection()).multiply(r));
 
             generateFloor(pos);
 

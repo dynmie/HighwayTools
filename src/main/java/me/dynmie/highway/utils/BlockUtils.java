@@ -1,7 +1,7 @@
 package me.dynmie.highway.utils;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class BlockUtils {
 
@@ -10,7 +10,7 @@ public class BlockUtils {
     }
 
     public static boolean isTypeAir(Block block) {
-        return block.getDefaultState().isAir();
+        return block.defaultBlockState().isAir();
     }
 
     public static Block returnAirIfAir(Block block) {

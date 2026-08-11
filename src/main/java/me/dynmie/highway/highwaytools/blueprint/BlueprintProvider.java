@@ -1,6 +1,6 @@
 package me.dynmie.highway.highwaytools.blueprint;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

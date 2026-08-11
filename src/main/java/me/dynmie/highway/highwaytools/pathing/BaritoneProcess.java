@@ -5,8 +5,8 @@ import baritone.api.process.IBaritoneProcess;
 import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import me.dynmie.highway.modules.HighwayTools;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 
 public class BaritoneProcess implements IBaritoneProcess {
 
@@ -18,7 +18,7 @@ public class BaritoneProcess implements IBaritoneProcess {
 
     @Override
     public boolean isActive() {
-        return tools.isActive() && MinecraftClient.getInstance().player != null;
+        return tools.isActive() && Minecraft.getInstance().player != null;
     }
 
     @Override

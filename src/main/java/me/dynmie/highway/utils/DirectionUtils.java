@@ -1,7 +1,7 @@
 package me.dynmie.highway.utils;
 
 import meteordevelopment.meteorclient.utils.misc.HorizontalDirection;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.Vec3i;
 
 /**
  * @author dynmie

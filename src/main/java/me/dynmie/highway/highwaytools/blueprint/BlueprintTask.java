@@ -1,6 +1,6 @@
 package me.dynmie.highway.highwaytools.blueprint;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
 public class BlueprintTask {
 

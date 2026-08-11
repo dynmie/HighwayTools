@@ -1,12 +1,12 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.BlockPos;
 
 import java.util.Random;
 
@@ -96,7 +96,7 @@ public class BlockTask {
     }
 
     public double getEyeDistance() {
-        return MinecraftClient.getInstance().player.getEyePos().distanceTo(getBlockPos().toCenterPos());
+        return Minecraft.getInstance().player.getEyePosition().distanceTo(getBlockPos().getCenter());
     }
 
     public TaskState getTaskState() {

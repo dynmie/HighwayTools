@@ -4,8 +4,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.commands.Command;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.CommandSource;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 
 public class CheckBlocksCommand extends Command {
 
@@ -18,10 +18,10 @@ public class CheckBlocksCommand extends Command {
     }
 
     @Override
-    public void build(LiteralArgumentBuilder<CommandSource> builder) {
+    public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         builder.executes(context -> {
             for (BlockTask value : tools.getTaskManager().getBlockTasks().values()) {
-                info(value.getBlockPos() + " " + value.getTaskState() + " " + MinecraftClient.getInstance().world.getBlockState(value.getBlockPos()).getBlock());
+                info(value.getBlockPos() + " " + value.getTaskState() + " " + Minecraft.getInstance().level.getBlockState(value.getBlockPos()).getBlock());
             }
             return SINGLE_SUCCESS;
         });

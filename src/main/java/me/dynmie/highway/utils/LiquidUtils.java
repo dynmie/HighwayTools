@@ -1,7 +1,7 @@
 package me.dynmie.highway.utils;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FluidBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.LiquidBlock;
 
 /**
  * @author dynmie
@@ -13,7 +13,7 @@ public class LiquidUtils {
     }
 
     public static boolean isLiquid(BlockState state) {
-        return state.getBlock() instanceof FluidBlock;
+        return state.getBlock() instanceof LiquidBlock;
     }
 
 }

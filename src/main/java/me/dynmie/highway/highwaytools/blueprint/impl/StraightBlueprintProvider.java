@@ -3,8 +3,8 @@ package me.dynmie.highway.highwaytools.blueprint.impl;
 import me.dynmie.highway.highwaytools.blueprint.BlueprintProvider;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.utils.misc.MBlockPos;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class StraightBlueprintProvider implements BlueprintProvider {
     @Override
     public @NotNull List<BlockPos> getFloor(BlockPos basePosition) {
         if (tools.getBlueprintMode().get() == HighwayTools.BlueprintMode.Tunnel) {
-            return List.of(basePosition.offset(Direction.DOWN));
+            return List.of(basePosition.relative(Direction.DOWN));
         }
 
         int width = tools.getWidth().get();
