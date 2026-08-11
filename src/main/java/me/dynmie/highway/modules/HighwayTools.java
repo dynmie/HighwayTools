@@ -111,6 +111,14 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Boolean> cornerBlock = sgGeneral.add(new BoolSetting.Builder()
+        .name("corner-block")
+        .description("Build a corner block at the highway's leading edge when width is larger than 2.")
+        .defaultValue(true)
+        .visible(() -> width.get() > 2)
+        .build()
+    );
+
     private final Setting<Boolean> shuffle = sgGeneral.add(new BoolSetting.Builder()
         .name("shuffle")
         .description("Should shuffle tasks.")
@@ -535,6 +543,10 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getMineAboveRailings() {
         return mineAboveRailings;
+    }
+
+    public Setting<Boolean> getCornerBlock() {
+        return cornerBlock;
     }
 
     public Setting<Rotation> getRotation() {

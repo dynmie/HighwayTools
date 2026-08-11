@@ -42,6 +42,13 @@ public class StraightBlueprintProvider implements BlueprintProvider {
             }
         }
 
+        if (tools.getCornerBlock().get() && width > 2) {
+            // leading corner: front-center, at the height of the front wall
+            ret.add(basePosition
+                .offset(tools.getDirection().offsetX, 0, tools.getDirection().offsetZ)  // one ahead
+                .above(height - 1));
+        }
+
         return ret;
     }
 
