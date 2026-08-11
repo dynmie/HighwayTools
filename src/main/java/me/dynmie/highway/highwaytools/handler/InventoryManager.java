@@ -6,11 +6,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 import java.util.ArrayList;
@@ -119,10 +122,16 @@ public class InventoryManager {
     }
 
     private int findBestPickaxeCount() {
+        // All pickaxes, not just diamond — mirrors Lambda's `countItem<ItemPickaxe>()`. A held
+        // netherite pickaxe must satisfy the save-tools threshold, or the module tries to
+        // restock diamond pickaxes on every single break. MC 26.1.2 has no PickaxeItem class
+        // (items are component-based), so detect pickaxes the way the game does: a Tool
+        // component that is the correct tool for obsidian (only pickaxes can mine it).
         int best = 0;
         for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
             ItemStack stack = mc.player.getInventory().getItem(i);
-            if (stack.getItem() == Items.DIAMOND_PICKAXE) best += stack.getCount();
+            Tool tool = stack.get(DataComponents.TOOL);
+            if (tool != null && tool.isCorrectForDrops(Blocks.OBSIDIAN.defaultBlockState())) best += stack.getCount();
         }
         return best;
     }

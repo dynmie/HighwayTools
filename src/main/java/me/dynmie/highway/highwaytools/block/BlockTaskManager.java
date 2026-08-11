@@ -136,6 +136,12 @@ public class BlockTaskManager {
     }
 
     public void runTasks() {
+        // [HT-DIAG] how often is runTasks actually entered?
+        if (mc.player != null && mc.player.tickCount % 20 == 0) {
+            System.out.println("[HT-DIAG] RUNTASKS t=" + mc.player.tickCount
+                + " waitTicks=" + inventoryHandler.getWaitTicks());
+        }
+
         // Container restock has priority over the normal block loop, but the loop keeps
         // ticking (update-only pass) while the container is open, so task states, mining
         // progress and the overlay never freeze. Restock is triggered lazily per-task
@@ -148,22 +154,56 @@ public class BlockTaskManager {
 
         updateBlockTasks();
 
-        // place-delay pause: blocks acting but not the update pass above
-        if (inventoryHandler.getWaitTicks() > 1) {
+        // [HT-DIAG] once-per-second heartbeat: loop alive + what each task is doing
+        if (mc.player != null && mc.player.tickCount % 20 == 0) {
+            StringBuilder sb = new StringBuilder("[HT-DIAG] HEARTBEAT t=" + mc.player.tickCount
+                + " waitTicks=" + inventoryHandler.getWaitTicks()
+                + " tasks=" + blockTasks.size() + " states=");
+            Map<TaskState, Integer> counts = new java.util.HashMap<>();
+            for (BlockTask t : blockTasks.values()) counts.merge(t.getTaskState(), 1, Integer::sum);
+            counts.entrySet().forEach(e -> sb.append(e.getKey()).append("=").append(e.getValue()).append(" "));
+            System.out.println(sb);
+        }
+
+        // decrement the shared wait counter each tick
+        if (inventoryHandler.getWaitTicks() > 0) {
             inventoryHandler.decreaseWaitTicks(1);
-            return;
         }
 
         sortedTasks.clear();
         sortedTasks.addAll(blockTasks.values());
 
+        // [HT-DIAG] count BREAK tasks in the pool before acting
+        int breakCount = 0;
+        for (BlockTask t : blockTasks.values()) if (t.getTaskState() == TaskState.BREAK) breakCount++;
+        int firstActed = -1;
+        int actedIdx = 0;
         for (BlockTask task : sortedTasks) {
+            // Placement pacing: only PLACE/PLACED tasks are held back while waitTicks > 0.
+            // BREAK/PENDING_BREAK and everything else always act — the waitTicks counter is
+            // set by PlaceHandler and must never throttle the break path.
+            if ((task.getTaskState() == TaskState.PLACE || task.getTaskState() == TaskState.PLACED)
+                && inventoryHandler.getWaitTicks() > 0) {
+                continue;
+            }
+
             tools.getTaskExecutor().doTask(task, false);
 
             if (task.getTaskState() == TaskState.DONE || task.getTaskState() == TaskState.BROKEN || task.getTaskState() == TaskState.PLACED) {
+                actedIdx++;
                 continue;
             }
-            return;
+            firstActed = actedIdx;
+            break;
+        }
+
+        if (firstActed >= 0 && (mc.player != null && mc.player.tickCount % 4 == 0)) {
+            System.out.println("[HT-DIAG] ACTED idx=" + firstActed + " of " + sortedTasks.size()
+                + " breakTasks=" + breakCount
+                + " firstState=" + sortedTasks.stream().filter(t -> !(t.getTaskState() == TaskState.DONE
+                    || t.getTaskState() == TaskState.BROKEN || t.getTaskState() == TaskState.PLACED))
+                    .map(BlockTask::getTaskState).findFirst().orElse(null)
+                + " waitTicks=" + inventoryHandler.getWaitTicks());
         }
     }
 

@@ -41,66 +41,76 @@ public class BreakHandler {
             return;
         }
 
-        // lazy restock: if pickaxes are at/below the save threshold, request a restock
-        // (deferred to next tick) but keep mining with the best available tool in the meantime
-        tools.getTaskManager().needsToolsRestockCheck();
-
-        // select the best tool for this block and hold it for the whole mine.
-        // prepareToolInHotbar's swap also syncs the held item to the server.
-        int slot = inventoryHandler.prepareToolInHotbar(blockState);
+        // NO restock trigger here. Lambda's `swapOrMoveBestTool` starts a tool restock from
+        // the tool-selection gate exactly once and then keeps mining with the best tool; the
+        // container itself runs at the top of runTasks. Triggering a restock from inside the
+        // mine function on every break would set containerTask, which blocks the loop until
+        // the container times out (60 ticks), then the next break triggers it again — one
+        // break per restock cycle. Restock must not gate mining.
 
         TaskState state = task.getTaskState();
 
         if (state == TaskState.BREAK) {
-            // start mining: mark the START tick once, send the start packet
+            // select the tool ONCE when the mine starts and hold it for the whole mine.
+            // prepareToolInHotbar's swap also syncs the held item to the server.
+            inventoryHandler.prepareToolInHotbar(blockState);
             task.updateState(TaskState.BREAKING);
             task.setStartMineTick(mc.player.tickCount);
 
             boolean creative = mc.player.getAbilities().instabuild;
             boolean insta = creative || BlockUtils.canInstaBreak(pos);
-            sendStartPacket(pos, direction(pos));
+
+            // [HT-DIAG] ground truth: every block that starts a dig
+            System.out.println("[HT-DIAG] BREAK start " + pos + " creative=" + creative
+                + " insta=" + insta
+                + " held=" + (mc.player.getMainHandItem().isEmpty() ? "EMPTY" : mc.player.getMainHandItem().getItem())
+                + " slot=" + mc.player.getInventory().getSelectedSlot()
+                + " waitTicks=" + inventoryHandler.getWaitTicks());
+
             if (insta) {
-                sendStopPacket(pos, direction(pos));
-                task.updateState(TaskState.PENDING_BREAK);
-            }
-            swingHand();
-        } else if (state == TaskState.BREAKING) {
-            // per-task progress: getDestroyProgress already accounts for the held tool,
-            // so the break time is deterministic from the start tick — no shared state.
-            int elapsed = mc.player.tickCount - task.getStartMineTick();
-            int ticksNeeded = calcTicksToBreakBlock(pos, blockState);
-
-            boolean creative = mc.player.getAbilities().instabuild;
-            boolean ready = creative || elapsed >= ticksNeeded;
-
-            if (ready) {
-                sendStopPacket(pos, direction(pos));
-                swingHand();
-                if (!tools.getAvoidMineGhostBlocks().get()) {
-                    BlockUtils.breakBlock(pos, true);
-                }
-                // Keep the tool held: the server finishes the break via its delayed-destroy
-                // path, which recomputes getDestroyProgress every server tick using the held
-                // item. swapBack() here would resync an empty/non-tool hand, dropping the
-                // progress rate ~8x and making mining appear super slow. The tool is released
-                // naturally when the next task swaps it away (e.g. PlaceHandler).
-                task.updateState(TaskState.PENDING_BREAK);
-            } else if (elapsed > 10) {
-                // progress stalled for 10+ ticks — re-send START to unstick the dig
+                // INSTANT (creative or insta-mine): mirrors Lambda's mineBlockInstant —
+                // send START (server does creative destroyAndAck) and go PENDING_BREAK.
+                // The block is destroyed server-side and the air is confirmed next tick.
+                // Exactly one block per tick is guaranteed by the PENDING_BREAK state, NOT
+                // by waitTicks — waitTicks is shared with the placement pace and setting it
+                // here would throttle every break to the place-delay cadence.
                 sendStartPacket(pos, direction(pos));
                 swingHand();
+                task.updateState(TaskState.PENDING_BREAK);
+                return;
+            }
+
+            // NORMAL (survival): START once, then accumulate progress each tick.
+            sendStartPacket(pos, direction(pos));
+            swingHand();
+        } else if (state == TaskState.BREAKING) {
+            // Progress from the best tool in inventory (meteor's getBreakDelta), NOT the held
+            // item — same as meteor PacketMine's progress()/isReady() and Lambda's
+            // ticksNeeded from getPlayerRelativeBlockHardness. Never waits on a server ack.
+            int fastestSlot = meteordevelopment.meteorclient.utils.player.InvUtils.findFastestTool(blockState).slot();
+            double delta = BlockUtils.getBreakDelta(fastestSlot, blockState);
+            int elapsed = mc.player.tickCount - task.getStartMineTick();
+            double progress = delta * elapsed;
+
+            // [HT-DIAG] survival progress (every 10 ticks)
+            if (elapsed % 10 == 0) {
+                System.out.println("[HT-DIAG] BREAKING " + pos + " delta=" + String.format("%.4f", delta)
+                    + " elapsed=" + elapsed + " progress=" + String.format("%.3f", progress)
+                    + " held=" + (mc.player.getMainHandItem().isEmpty() ? "EMPTY" : mc.player.getMainHandItem().getItem()));
+            }
+
+            if (progress >= 1.0) {
+                // finished: send STOP to complete the dig; the server applies the air.
+                System.out.println("[HT-DIAG] BREAKING done -> STOP " + pos + " progress=" + String.format("%.3f", progress));
+                sendStopPacket(pos, direction(pos));
+                swingHand();
+                task.updateState(TaskState.BROKEN);
             } else {
+                // keep digging: swing for animation; the server accumulates destroy progress
+                // from the held item. START is sent once, not re-sent every tick.
                 swingHand();
             }
         }
-    }
-
-    /**
-     * The number of game ticks to break a block with the currently held tool.
-     * Equivalent to the base addon's {@code calcTicksToBreakBlock}.
-     */
-    public static int calcTicksToBreakBlock(BlockPos pos, BlockState state) {
-        return (int) Math.ceil(1 / state.getDestroyProgress(mc.player, mc.level, pos));
     }
 
     private Direction direction(BlockPos pos) {
