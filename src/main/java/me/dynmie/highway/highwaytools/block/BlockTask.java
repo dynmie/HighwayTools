@@ -24,7 +24,6 @@ public class BlockTask {
     private int shuffle = 0;
     private int stuckTicks = 0;
     private int minedTicks = 0;
-    private boolean isOpen = false;
     private ItemStack toolToUse = ItemStack.EMPTY;
 
     public BlockTask(BlockPos blockPos, TaskState taskState, BlueprintTask blueprintTask, Item item) {
@@ -115,10 +114,6 @@ public class BlockTask {
         return shuffle;
     }
 
-    public boolean isOpen() {
-        return isOpen;
-    }
-
     public ItemStack getToolToUse() {
         return toolToUse;
     }
@@ -137,10 +132,6 @@ public class BlockTask {
 
     public void setShuffle(int shuffle) {
         this.shuffle = shuffle;
-    }
-
-    public void setOpen(boolean open) {
-        isOpen = open;
     }
 
     public void setToolToUse(ItemStack toolToUse) {

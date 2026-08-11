@@ -11,7 +11,6 @@ import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
@@ -315,14 +314,6 @@ public class TaskExecutor {
 
     private void placeBlock(BlockTask task) {
         placeHandler.place(task);
-    }
-
-    private boolean place(BlockTask task, int slot) {
-        if (tools.getRotation().get().place && tools.getRotateCamera().get() && mc.player != null) {
-            mc.player.setXRot((float) Rotations.getPitch(task.getBlockPos()));
-            mc.player.setYRot((float) Rotations.getYaw(task.getBlockPos()));
-        }
-        return BlockUtils.place(task.getBlockPos(), InteractionHand.MAIN_HAND, slot, tools.getRotation().get().place, 0, true, true, false);
     }
 
 }
