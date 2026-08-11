@@ -47,7 +47,20 @@ public class TaskExecutor {
             case PLACE, LIQUID -> doPlace(task, check);
             case PENDING_BREAK -> doPendingBreak(task);
             case PENDING_PLACE -> doPendingPlace(task);
+            case IMPOSSIBLE_PLACE -> doImpossiblePlace(task);
             default -> {}
+        }
+    }
+
+    private void doImpossiblePlace(BlockTask task) {
+        // No reachable support right now. Re-request the sequence next tick;
+        // if the player moved or the pathfinder advanced, a support may exist.
+        // After the stuck threshold, drop the task (mark DONE) so the bot isn't stuck forever.
+        task.onStuck();
+        if (task.getStuckTicks() > 20) {
+            task.updateState(TaskState.DONE);
+        } else {
+            task.updateState(TaskState.PLACE);  // retry placement (re-runs searcher)
         }
     }
 
