@@ -36,6 +36,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -227,6 +228,13 @@ public class HighwayTools extends Module {
         .defaultValue(0.2d)
         .min(0.01d)
         .sliderMax(0.5d)
+        .build()
+    );
+
+    private final Setting<List<Block>> ignoreBlocks = sgGeneral.add(new BlockListSetting.Builder()
+        .name("ignore-blocks")
+        .description("Blocks the bot will never break, even if the blueprint wants them mined.")
+        .defaultValue(IgnoreList.defaultBlocks().toArray(new Block[0]))
         .build()
     );
 
@@ -422,7 +430,7 @@ public class HighwayTools extends Module {
     private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
 
     private final InventoryManager inventoryManager = new InventoryManager(this);
-    private final IgnoreList ignoreList = new IgnoreList();
+    private final IgnoreList ignoreList = new IgnoreList(() -> ignoreBlocks.get());
     private final InventoryHandler inventoryHandler = new InventoryHandler(this);
     private final BreakHandler breakHandler = new BreakHandler(this, inventoryHandler);
     private final LiquidHandler liquidHandler = new LiquidHandler(this);

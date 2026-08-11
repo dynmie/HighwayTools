@@ -2,7 +2,6 @@ package me.dynmie.highway;
 
 import baritone.api.BaritoneAPI;
 import me.dynmie.highway.commands.CheckBlocksCommand;
-import me.dynmie.highway.commands.IgnoreCommand;
 import me.dynmie.highway.highwaytools.pathing.BaritoneProcess;
 import me.dynmie.highway.modules.HighwayTools;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -27,7 +26,6 @@ public class HighwayAddon extends MeteorAddon {
 
         // Commands
         Commands.add(new CheckBlocksCommand(tools));
-        Commands.add(new IgnoreCommand(tools));
     }
 
     @Override

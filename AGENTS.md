@@ -26,7 +26,7 @@
 This is a **Meteor Client addon** (a Fabric client mod). Entry point is `me.dynmie.highway.HighwayAddon` (`MeteorAddon`), registered via the `"meteor"` entrypoint in `fabric.mod.json`. On init it registers:
 - the `HighwayTools` module (`modules/HighwayTools.java`) under a custom `Category`,
 - a `BaritoneProcess` with Baritone's pathing control manager,
-- a `CheckBlocksCommand` (lists current block tasks) and an `IgnoreCommand` (manage `IgnoreList`).
+- a `CheckBlocksCommand` (lists current block tasks). Ignore-list and distance are GUI settings on the module, not commands.
 
 **Core loop** — the `HighwayTools` module is the coordinator. Each tick (`TickEvent.Pre`) it runs the following pipeline:
 
