@@ -415,11 +415,9 @@ public class TaskExecutor {
                 BlockUtils.breakBlock(task.blockPos, true);
                 task.taskState = TaskState.DONE;
                 BlockTaskManager.getInstance().containerTask = null;
-                BlockTaskManager.getInstance().restocking = false;
             }
             case DONE -> {
                 BlockTaskManager.getInstance().containerTask = null;
-                BlockTaskManager.getInstance().restocking = false;
             }
             default -> {}
         }

@@ -36,9 +36,8 @@ public class BlockTaskManager {
     private final InventoryHandler inventoryHandler;
     private final InventoryManager inventoryManager;
 
-    /** Active container restock task; has priority over regular block tasks while non-null. */
+    /** Active container restock task; runs inside the loop while non-null. */
     public ContainerTask containerTask = null;
-    public boolean restocking = false;
 
     public BlockTaskManager(HighwayTools tools, InventoryHandler inventoryHandler) {
         this.tools = tools;
@@ -136,36 +135,28 @@ public class BlockTaskManager {
     }
 
     public void runTasks() {
+        // Container restock has priority over the normal block loop, but the loop keeps
+        // ticking (update-only pass) while the container is open, so task states, mining
+        // progress and the overlay never freeze. Restock is triggered lazily per-task
+        // (see InventoryHandler / BreakHandler), never as a gate in front of this loop.
+        if (containerTask != null) {
+            tools.getTaskExecutor().doContainerTask(containerTask);
+            updateBlockTasks();
+            return;
+        }
+
+        updateBlockTasks();
+
+        // place-delay pause: blocks acting but not the update pass above
         if (inventoryHandler.getWaitTicks() > 1) {
             inventoryHandler.decreaseWaitTicks(1);
             return;
-        }
-
-        // RESTOCK GATE: container task has priority over normal block tasks
-        if (containerTask != null) {
-            tools.getTaskExecutor().doContainerTask(containerTask);
-            return;
-        }
-
-        if (inventoryManager.needsRestock() && !restocking) {
-            startRestock();
-            return;
-        }
-        restocking = false;
-
-        for (BlockTask task : blockTasks.values()) {
-            tools.getTaskExecutor().doTask(task, true);
-
-            if (tools.getShuffle().get()) task.shuffle();
         }
 
         sortedTasks.clear();
         sortedTasks.addAll(blockTasks.values());
 
         for (BlockTask task : sortedTasks) {
-
-//            if (task.getTaskState() != TaskState.DONE)
-
             tools.getTaskExecutor().doTask(task, false);
 
             if (task.getTaskState() == TaskState.DONE || task.getTaskState() == TaskState.BROKEN || task.getTaskState() == TaskState.PLACED) {
@@ -175,13 +166,21 @@ public class BlockTaskManager {
         }
     }
 
+    /** Update-only pass: let every task observe world state and advance its state machine without acting. */
+    private void updateBlockTasks() {
+        for (BlockTask task : blockTasks.values()) {
+            tools.getTaskExecutor().doTask(task, true);
+
+            if (tools.getShuffle().get()) task.shuffle();
+        }
+    }
+
     /**
      * Kicks off the restock lifecycle: AutoObsidian (place + grind an ender chest) when the
      * player is low on the main block, otherwise place a shulker containing the restock item,
      * or open the ender chest directly when no shulker has the item.
      */
     private void startRestock() {
-        restocking = true;
         Item item = inventoryManager.restockItem();
 
         // AutoObsidian: place an ender chest, restock from it, then break it for the obsidian
@@ -215,7 +214,14 @@ public class BlockTaskManager {
 
     /** Re-check restock need, e.g. from {@link InventoryHandler} when a needed item is missing. */
     public void needsRestockCheck() {
-        if (inventoryManager.needsRestock()) {
+        if (containerTask == null && inventoryManager.needsRestock()) {
+            startRestock();
+        }
+    }
+
+    /** Lazy tools restock (mirrors Lambda): request one when pickaxes are low, unless already running. */
+    public void needsToolsRestockCheck() {
+        if (containerTask == null && inventoryManager.needsRestockTools()) {
             startRestock();
         }
     }

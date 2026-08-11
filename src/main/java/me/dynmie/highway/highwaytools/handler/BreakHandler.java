@@ -41,6 +41,10 @@ public class BreakHandler {
             return;
         }
 
+        // lazy restock: if pickaxes are at/below the save threshold, request a restock
+        // (deferred to next tick) but keep mining with the best available tool in the meantime
+        tools.getTaskManager().needsToolsRestockCheck();
+
         // select the best tool for this block and hold it for the whole mine
         int slot = inventoryHandler.prepareToolInHotbar(blockState);
         mc.player.getInventory().setSelectedSlot(slot);

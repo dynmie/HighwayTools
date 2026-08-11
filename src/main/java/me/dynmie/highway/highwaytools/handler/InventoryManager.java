@@ -93,6 +93,11 @@ public class InventoryManager {
             || findBestPickaxeCount() <= tools.getSaveTools().get();
     }
 
+    /** Tools-only restock need (mirrors Lambda's {@code swapOrMoveBestTool} check). */
+    public boolean needsRestockTools() {
+        return findBestPickaxeCount() <= tools.getSaveTools().get();
+    }
+
     public Item restockItem() {
         Block mainBlock = tools.getMainBlock().get();
         if (countBlock(mainBlock) <= tools.getSaveMaterial().get()) return mainBlock.asItem();
