@@ -1,0 +1,17 @@
+[versions]
+mod-version = "0.1.1"
+jdk = "25"
+minecraft = "26.1.2"
+loader = "0.19.3"
+meteor = "26.1.2-SNAPSHOT"
+baritone = "26.1-SNAPSHOT"
+loom = "1.17-SNAPSHOT"
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "loader" }
+meteor-client = { module = "meteordevelopment:meteor-client", version.ref = "meteor" }
+baritone = { module = "meteordevelopment:baritone", version.ref = "baritone" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
