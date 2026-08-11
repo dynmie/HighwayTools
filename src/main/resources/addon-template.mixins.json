@@ -2,7 +2,9 @@
   "required": true,
   "package": "me.dynmie.highway.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": [],
+  "client": [
+    "MultiPlayerGameModeAccessor"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

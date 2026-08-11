@@ -7,7 +7,7 @@ public enum TaskState {
     BREAKING(100, 100),
     BREAK(20, 20),
     PLACE(20, 20),
-    PENDING_BREAK(100, 100),
+    PENDING_BREAK(10, 10),
     PENDING_PLACE(100, 100),
     DONE(72727, 1);
 

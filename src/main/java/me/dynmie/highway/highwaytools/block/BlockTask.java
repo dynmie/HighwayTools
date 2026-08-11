@@ -24,6 +24,7 @@ public class BlockTask {
     private int shuffle = 0;
     private int stuckTicks = 0;
     private int minedTicks = 0;
+    private int startMineTick = 0;
     private ItemStack toolToUse = ItemStack.EMPTY;
 
     public BlockTask(BlockPos blockPos, TaskState taskState, BlueprintTask blueprintTask, Item item) {
@@ -48,6 +49,7 @@ public class BlockTask {
         if (state == taskState) return;
         ranTicks = 0;
         stuckTicks = 0;
+        startMineTick = 0;
         taskState = state;
     }
 
@@ -72,6 +74,14 @@ public class BlockTask {
 
     public int getMinedTicks() {
         return minedTicks;
+    }
+
+    public int getStartMineTick() {
+        return startMineTick;
+    }
+
+    public void setStartMineTick(int startMineTick) {
+        this.startMineTick = startMineTick;
     }
 
     public void setStuckTicks(int stuckTicks) {
