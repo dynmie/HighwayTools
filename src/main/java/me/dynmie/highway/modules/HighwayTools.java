@@ -26,13 +26,13 @@ import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -145,7 +145,7 @@ public class HighwayTools extends Module {
         .name("block-to-place")
         .description("Main block to place")
         .defaultValue(Blocks.OBSIDIAN)
-        .filter(block -> Block.isShapeFullCube(block.getDefaultState().getCollisionShape(mc.world, ZERO)))
+        .filter(block -> Block.isShapeFullBlock(block.defaultBlockState().getCollisionShape(mc.level, ZERO)))
         .build()
     );
 
@@ -153,7 +153,7 @@ public class HighwayTools extends Module {
         .name("filler-block")
         .description("Filler block.")
         .defaultValue(Blocks.NETHERRACK)
-        .filter(block -> Block.isShapeFullCube(block.getDefaultState().getCollisionShape(mc.world, ZERO)))
+        .filter(block -> Block.isShapeFullBlock(block.defaultBlockState().getCollisionShape(mc.level, ZERO)))
         .build()
     );
 
@@ -319,7 +319,7 @@ public class HighwayTools extends Module {
     private BlockPos currentPosition = new BlockPos(0, 64, 0);
     private BlockPos startPosition = new BlockPos(0, 64, 0);
 
-    public Vec3d start = new Vec3d(0d, 64d, 0d);
+    private Vec3 start = new Vec3(0d, 64d, 0d);
     public int blocksBroken = 0;
     public int blocksPlaced = 0;
     private boolean displayInfo = true;
@@ -343,11 +343,11 @@ public class HighwayTools extends Module {
 
     @Override
     public void onActivate() {
-        direction = HorizontalDirection.get(mc.player.getYaw());
+        direction = HorizontalDirection.get(mc.player.getYRot());
 
-        start = mc.player.getPos();
-        startPosition = mc.player.getBlockPos();
-        currentPosition = mc.player.getBlockPos();
+        start = mc.player.position();
+        startPosition = mc.player.blockPosition();
+        currentPosition = mc.player.blockPosition();
 
         blocksBroken = 0;
         blocksPlaced = 0;
@@ -492,16 +492,16 @@ public class HighwayTools extends Module {
     }
 
     public void disconnect(String message, Object... args) {
-        MutableText text = Text.literal(String.format("%s[%s%s%s] %s", Formatting.GRAY, Formatting.BLUE, title, Formatting.GRAY, Formatting.RED) + String.format(message, args)).append("\n");
+        MutableComponent text = Component.literal(String.format("%s[%s%s%s] %s", ChatFormatting.GRAY, ChatFormatting.BLUE, title, ChatFormatting.GRAY, ChatFormatting.RED) + String.format(message, args)).append("\n");
         text.append(getStatsText());
 
-        mc.getNetworkHandler().getConnection().disconnect(text);
+        mc.getConnection().getConnection().disconnect(text);
     }
 
-    public MutableText getStatsText() {
-        MutableText text = Text.literal(String.format("%sDistance: %s%.0f\n", Formatting.GRAY, Formatting.WHITE, mc.player == null ? 0.0f : PlayerUtils.distanceTo(start)));
-        text.append(String.format("%sBlocks broken: %s%d\n", Formatting.GRAY, Formatting.WHITE, blocksBroken));
-        text.append(String.format("%sBlocks placed: %s%d", Formatting.GRAY, Formatting.WHITE, blocksPlaced));
+    public MutableComponent getStatsText() {
+        MutableComponent text = Component.literal(String.format("%sDistance: %s%.0f\n", ChatFormatting.GRAY, ChatFormatting.WHITE, mc.player == null ? 0.0f : PlayerUtils.distanceTo(start)));
+        text.append(String.format("%sBlocks broken: %s%d\n", ChatFormatting.GRAY, ChatFormatting.WHITE, blocksBroken));
+        text.append(String.format("%sBlocks placed: %s%d", ChatFormatting.GRAY, ChatFormatting.WHITE, blocksPlaced));
 
         return text;
     }
@@ -638,7 +638,7 @@ public class HighwayTools extends Module {
         return startPosition;
     }
 
-    public Vec3d getStart() {
+    public Vec3 getStart() {
         return start;
     }
 
