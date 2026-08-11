@@ -81,7 +81,7 @@ public class PlacementSearcher {
         );
 
         if (eyePos.distanceTo(hitVec) > tools.getReach().get()) return null;
-        if (!BlockUtils.canPlace(target)) return null;
+        if (!BlockUtils.canPlace(target, false)) return null;
 
         return new PlacementStep(supportPos, clickSide, hitVec, target);
     }

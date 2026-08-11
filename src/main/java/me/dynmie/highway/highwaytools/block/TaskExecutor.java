@@ -285,7 +285,9 @@ public class TaskExecutor {
 
         if (check) return;
 
-        if (!BlockUtils.canPlace(task.getBlockPos(), true)) {
+        // non-conservative: only the clicked face needs to be clear, not the whole shape.
+        // highway front/AIR and railings/floor-into-existing blocks must be placeable.
+        if (!BlockUtils.canPlace(task.getBlockPos(), false)) {
             return;
         }
 
