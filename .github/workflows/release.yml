@@ -12,6 +12,11 @@ on:
         required: true
         default: '0.2.0'
         type: string
+      notes:
+        description: 'Release notes (Markdown). Leave blank to auto-generate from merged PRs. If provided, the For Minecraft line is auto-prepended and the changelog is not auto-generated.'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -38,14 +43,26 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build -Pmod_version=${{ inputs.version }}
 
+    - name: Read Minecraft version
+      id: mc
+      run: |
+        MC=$(sed -n 's/^minecraft_version=//p' gradle.properties)
+        echo "short=${MC%.*}" >> "$GITHUB_OUTPUT"
+
+    - name: Compose release body
+      id: body
+      run: |
+        printf 'For Minecraft %s. Fabric is supported.\n\n' "${{ steps.mc.outputs.short }}" > body.md
+        printf '%s\n' "${{ inputs.notes }}" >> body.md
+        echo "path=$(pwd)/body.md" >> "$GITHUB_OUTPUT"
+
     - name: Create GitHub release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ inputs.version }}
         name: v${{ inputs.version }}
-        body: |
-          Automated build from commit `${{ github.sha }}`
+        body_path: body.md
         files: build/libs/*.jar
-        generate_release_notes: true
+        generate_release_notes: ${{ inputs.notes == '' }}
         prerelease: ${{ contains(inputs.version, '-pre') }}
         target_commitish: ${{ github.sha }}

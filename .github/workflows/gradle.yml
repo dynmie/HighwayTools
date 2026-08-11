@@ -55,6 +55,13 @@ jobs:
         path: build/libs/*.jar
         if-no-files-found: error
 
+    - name: Read Minecraft version
+      if: github.event_name == 'push'
+      id: mc
+      run: |
+        MC=$(sed -n 's/^minecraft_version=//p' gradle.properties)
+        echo "short=${MC%.*}" >> "$GITHUB_OUTPUT"
+
     - name: Publish prerelease
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
@@ -62,6 +69,8 @@ jobs:
         tag_name: v${{ steps.version.outputs.version }}
         name: v${{ steps.version.outputs.version }}
         body: |
+          For Minecraft ${{ steps.mc.outputs.short }}. Fabric is supported.
+
           Automated prerelease from commit `${{ github.sha }}`
         files: build/libs/*.jar
         generate_release_notes: true
