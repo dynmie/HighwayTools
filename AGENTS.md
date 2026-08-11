@@ -26,14 +26,18 @@
 This is a **Meteor Client addon** (a Fabric client mod). Entry point is `me.dynmie.highway.HighwayAddon` (`MeteorAddon`), registered via the `"meteor"` entrypoint in `fabric.mod.json`. On init it registers:
 - the `HighwayTools` module (`modules/HighwayTools.java`) under a custom `Category`,
 - a `BaritoneProcess` with Baritone's pathing control manager,
-- a `CheckBlocksCommand` (lists current block tasks).
+- a `CheckBlocksCommand` (lists current block tasks) and an `IgnoreCommand` (manage `IgnoreList`).
 
 **Core loop** — the `HighwayTools` module is the coordinator. Each tick (`TickEvent.Pre`) it runs the following pipeline:
 
 1. `BlueprintGenerator` produces a `Map<BlockPos, BlueprintTask>` — the desired state of the highway. A `BlueprintProvider` (`StraightBlueprintProvider` or `DiagonalBlueprintProvider`, chosen by direction) supplies the front/floor/railings/above-railings positions.
 2. `BlockTaskManager` converts the blueprint into `BlockTask`s by comparing the world state to the target block at each position, and holds them in a `ConcurrentHashMap`.
 3. `TaskExecutor` drives each `BlockTask` through the `TaskState` state machine (BREAK → BREAKING → BROKEN → PLACE → PLACED → DONE, plus LIQUID / PENDING_*), delegating actual work to the handlers.
-4. Handlers: `BreakHandler` (packet-based mining via `ServerboundPlayerActionPacket` + meteor's `BlockUtils.breakBlock`), `PlaceHandler` (placement via meteor's `BlockUtils.place`), `InventoryHandler` (item/tool finding + hotbar movement, using meteor's `InvUtils`/`Utils.getEnchantmentLevel`), `LiquidHandler`.
+4. Handlers: `BreakHandler` (packet mining — START/STOP `ServerboundPlayerActionPacket` sent through `startPrediction`), `PlaceHandler` (placement via meteor's `BlockUtils.interact` against a `PlacementStep`), `InventoryHandler` (item/tool finding + hotbar movement, using meteor's `InvUtils`/`Utils.getEnchantmentLevel`), `LiquidHandler` (spawns fill tasks for adjacent liquids).
+
+**Placement** (`highwaytools/place/`): `PlacementSearcher` (ported from Lambda's `getNeighbourSequence`) finds a chain of `PlacementStep`s (support block + click side + hit vector) up to `placement-search` depth. A task is only placed when a sequence exists; the deep search lets the bot place into gaps with no direct support.
+
+**Mining** — the packet-based path (startPrediction + START/STOP) is what actually breaks blocks; the `MultiPlayerGameModeAccessor` mixin exposes `startPrediction` for this. The insta/creative path sends START and waits for the server ack via the PENDING_BREAK state.
 
 **Baritone integration** (in `highwaytools/pathing/`): `BaritoneHelper` saves/restores baritone settings on module activate/deactivate; `BaritonePathfinder` advances the goal position along the highway direction; `BaritoneProcess` (an `IBaritoneProcess`) paths to that goal.
 
@@ -42,5 +46,6 @@ This is a **Meteor Client addon** (a Fabric client mod). Entry point is `me.dynm
 ## Important
 
 - `run/` is the development Minecraft game directory (world saves, meteor config/profiles/waypoints, baritone settings). It contains real user data — **never delete or restructure it**.
-- `libs/` holds the old 1.21.4 jars, no longer referenced by the build — leave in place.
-- When migrating or writing MC code, use mojmap names (see Stack). Meteor 26.1 helpers worth reusing instead of re-implementing: `meteordevelopment.meteorclient.utils.world.BlockUtils` (`place`, `canPlace`, `getDirection`, `breakBlock`), `meteordevelopment.meteorclient.utils.player.InvUtils` (`find`, `move`, `testInMainHand`), `meteordevelopment.meteorclient.utils.Utils.getEnchantmentLevel`.
+- **The bot controls the hotbar — never `swapBack`.** `prepareItemInHotbar`/`prepareToolInHotbar` return the hotbar slot that actually holds the item, and the caller `InvUtils.swap(slot, false)` selects it. Restoring the previous slot was the cause of a hotbar/placement desync bug.
+- **`waitTicks` is placement pacing only.** It's a shared counter decremented once per tick in `runTasks()`; the per-task gate holds back only PLACE/PLACED tasks while it's > 0. The break path must never set it — doing so throttles every break (the cause of a "mining is super slow" bug).
+- When migrating or writing MC code, use mojmap names (see Stack). Meteor 26.1 helpers worth reusing instead of re-implementing: `meteordevelopment.meteorclient.utils.world.BlockUtils` (`interact`, `canPlace`, `getDirection`, `breakBlock`), `meteordevelopment.meteorclient.utils.player.InvUtils` (`find`, `move`, `swap`, `testInMainHand`), `meteordevelopment.meteorclient.utils.Utils.getEnchantmentLevel`. Note: this MC version has **no `PickaxeItem`/`DiggerItem` class** — detect pickaxes via the `Tool` component (`stack.get(DataComponents.TOOL)` + `isCorrectForDrops`).
