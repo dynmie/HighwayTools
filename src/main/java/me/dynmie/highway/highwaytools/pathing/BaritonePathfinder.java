@@ -22,7 +22,7 @@ import java.util.Map;
 public class BaritonePathfinder {
 
     public enum MovementState {
-        RUNNING, BRIDGE
+        RUNNING, BRIDGE, RESTOCK
     }
 
     private static final Minecraft mc = Minecraft.getInstance();
@@ -83,13 +83,6 @@ public class BaritonePathfinder {
         if (!isDone(nextPos)) return;
         if (!isDone(nextPos.below())) return;
 
-        // The next front column is fully done — advance. If the floor ahead of the player is
-        // missing (we can't see it to place), enter BRIDGE to walk forward onto the built floor.
-        if (shouldBridge()) {
-            movementState = MovementState.BRIDGE;
-            return;
-        }
-
         tools.setCurrentPosition(nextPos);
         goal = tools.getCurrentPosition();
     }
@@ -132,8 +125,10 @@ public class BaritonePathfinder {
      * Mirrors Lambda's {@code shouldBridge}: bridge when scaffold is on, no container restock
      * is active, the next step is air above replaceable ground, and no currently-placeable
      * task has a reachable sequence (i.e. the front truly can't be built from where we are).
+     * Public so the task executor can enter BRIDGE from {@code IMPOSSIBLE_PLACE}, exactly like
+     * Lambda's {@code doImpossiblePlace}.
      */
-    private boolean shouldBridge() {
+    public boolean shouldBridge() {
         ContainerTask containerTask = tools.getTaskManager().containerTask;
         if (!tools.getScaffold().get() || containerTask != null) return false;
 
@@ -175,5 +170,13 @@ public class BaritonePathfinder {
     public BlockPos getGoal() {
         // suppress the baritone goal while bridging so baritone requests a pause
         return movementState == MovementState.BRIDGE ? null : goal;
+    }
+
+    public MovementState getMovementState() {
+        return movementState;
+    }
+
+    public void setMovementState(MovementState movementState) {
+        this.movementState = movementState;
     }
 }
