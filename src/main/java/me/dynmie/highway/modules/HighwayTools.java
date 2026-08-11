@@ -13,6 +13,7 @@ import me.dynmie.highway.highwaytools.handler.LiquidHandler;
 import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.highwaytools.pathing.BaritoneHelper;
 import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder;
+import me.dynmie.highway.utils.IgnoreList;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -326,6 +327,8 @@ public class HighwayTools extends Module {
 
     private final ConcurrentLinkedQueue<Runnable> runnableQueue = new ConcurrentLinkedQueue<>();
 
+    private final IgnoreList ignoreList = new IgnoreList();
+
     private final InventoryHandler inventoryHandler = new InventoryHandler(this);
     private final BreakHandler breakHandler = new BreakHandler(this, inventoryHandler);
     private final LiquidHandler liquidHandler = new LiquidHandler(this);
@@ -508,6 +511,10 @@ public class HighwayTools extends Module {
 
     public void runNextTick(Runnable runnable) {
         runnableQueue.add(runnable);
+    }
+
+    public IgnoreList getIgnoreList() {
+        return ignoreList;
     }
 
     public Setting<Integer> getWidth() {
