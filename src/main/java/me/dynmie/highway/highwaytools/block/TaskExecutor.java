@@ -413,8 +413,8 @@ public class TaskExecutor {
     }
 
     /**
-     * Opens the container with a raw {@link net.minecraft.network.protocol.game.ServerboundUseItemOnPacket}
-     * instead of {@code mc.gameMode.useItemOn}, so the client never grabs the mouse to open the GUI itself.
+     * Opens the container with a raw {@link ServerboundUseItemOnPacket} instead of
+     * {@code mc.gameMode.useItemOn}, so the client never grabs the mouse to open the GUI itself.
      */
     private boolean openContainer(ContainerTask task) {
         if (mc.getConnection() == null) return false;
