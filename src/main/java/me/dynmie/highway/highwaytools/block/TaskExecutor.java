@@ -1,20 +1,36 @@
 package me.dynmie.highway.highwaytools.block;
 
+import me.dynmie.highway.highwaytools.container.ContainerTask;
 import me.dynmie.highway.highwaytools.handler.BreakHandler;
 import me.dynmie.highway.highwaytools.handler.InventoryHandler;
+import me.dynmie.highway.highwaytools.handler.InventoryManager;
 import me.dynmie.highway.highwaytools.handler.LiquidHandler;
 import me.dynmie.highway.highwaytools.handler.PlaceHandler;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.LiquidUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.HashedStack;
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
 
@@ -25,13 +41,18 @@ public class TaskExecutor {
     private final HighwayTools tools;
     private final BreakHandler breakHandler;
     private final InventoryHandler inventoryHandler;
+    private final InventoryManager inventoryManager;
     private final LiquidHandler liquidHandler;
     private final PlaceHandler placeHandler;
+
+    /** Set while a container click is in flight; gates the queue to one click per tick. */
+    private boolean clickQueueBusy = false;
 
     public TaskExecutor(HighwayTools tools, BreakHandler breakHandler, InventoryHandler inventoryHandler, LiquidHandler liquidHandler, PlaceHandler placeHandler) {
         this.tools = tools;
         this.breakHandler = breakHandler;
         this.inventoryHandler = inventoryHandler;
+        this.inventoryManager = tools.getInventoryManager();
         this.liquidHandler = liquidHandler;
         this.placeHandler = placeHandler;
     }
@@ -342,6 +363,149 @@ public class TaskExecutor {
 
     private void placeBlock(BlockTask task) {
         placeHandler.place(task);
+    }
+
+    /**
+     * Drives the container restock lifecycle:
+     * PLACE -> OPEN_CONTAINER -> RESTOCK -> BREAK -> DONE.
+     * The container is placed remotely (pure packets, no mouse grab), its slots are pulled
+     * from one at a time with server-transaction-confirmed clicks, and the container is
+     * broken afterwards (AutoObsidian) so the drops are collected.
+     */
+    public void doContainerTask(ContainerTask task) {
+        if (mc.player == null) return;
+
+        switch (task.taskState) {
+            case PLACE -> {
+                // ender chest for AutoObsidian, otherwise the shulker holding the restock item
+                Item item = task.destroy ? Items.ENDER_CHEST : firstShulkerItem(task);
+                int slot = inventoryHandler.prepareItemInHotbar(item);
+                if (slot == -1) {
+                    task.taskState = TaskState.DONE;
+                    return;
+                }
+                BlockUtils.place(task.blockPos, InteractionHand.MAIN_HAND, slot, false, 0, true, true, false);
+                task.taskState = TaskState.OPEN_CONTAINER;
+            }
+            case OPEN_CONTAINER -> {
+                if (!openContainer(task)) {
+                    task.stuckTicks++;
+                    if (task.stuckTicks > 20) task.taskState = TaskState.DONE;
+                } else {
+                    task.taskState = TaskState.RESTOCK;
+                }
+            }
+            case RESTOCK -> {
+                // pull one stack per tick until the item is satisfied
+                if (pullOneStack(task)) {
+                    task.stuckTicks = 0;
+                    if (task.stopPull && !shouldKeepPulling(task)) {
+                        task.taskState = TaskState.BREAK;
+                        closeContainer();
+                    }
+                } else if (++task.stuckTicks > 60) {
+                    // no progress for ~3s: container never opened or ran out of space; bail
+                    task.taskState = TaskState.BREAK;
+                    closeContainer();
+                }
+            }
+            case BREAK -> {
+                BlockUtils.breakBlock(task.blockPos, true);
+                task.taskState = TaskState.DONE;
+                BlockTaskManager.getInstance().containerTask = null;
+                BlockTaskManager.getInstance().restocking = false;
+            }
+            case DONE -> {
+                BlockTaskManager.getInstance().containerTask = null;
+                BlockTaskManager.getInstance().restocking = false;
+            }
+            default -> {}
+        }
+    }
+
+    /**
+     * The shulker to place: prefer the one holding {@code task.item} (fewest of it), otherwise
+     * fall back to any shulker box in the inventory.
+     */
+    private Item firstShulkerItem(ContainerTask task) {
+        ItemStack shulker = inventoryManager.getShulkerWith(task.item);
+        if (!shulker.isEmpty()) return shulker.getItem();
+        if (mc.player == null) return Items.AIR;
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = mc.player.getInventory().getItem(i);
+            if (stack.getItem() instanceof BlockItem bi && bi.getBlock() instanceof ShulkerBoxBlock) {
+                return stack.getItem();
+            }
+        }
+        return Items.AIR;
+    }
+
+    /**
+     * Opens the container with a raw {@link ServerboundUseItemOnPacket} instead of
+     * {@code mc.gameMode.useItemOn}, so the client never grabs the mouse to open the GUI itself.
+     */
+    private boolean openContainer(ContainerTask task) {
+        if (mc.getConnection() == null) return false;
+        BlockPos pos = task.blockPos;
+        Direction side = Direction.UP;
+        Vec3 hitVec = Vec3.atCenterOf(pos).add(0, 0.5, 0);
+        BlockHitResult hit = new BlockHitResult(hitVec, side, pos, false);
+        mc.getConnection().send(new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, hit, 0));
+        return true;
+    }
+
+    private void closeContainer() {
+        if (mc.getConnection() == null || mc.player == null) return;
+        mc.getConnection().send(new ServerboundContainerClosePacket(mc.player.containerMenu.containerId));
+        mc.player.containerMenu = mc.player.inventoryMenu;
+    }
+
+    /**
+     * Pulls one stack of {@code task.item} out of the container per tick. The click is sent
+     * as a raw {@link ServerboundContainerClickPacket} and gated by {@link #clickQueueBusy};
+     * confirmation is polled from {@code containerMenu.getCarried()} (simplified, see plan).
+     */
+    private boolean pullOneStack(ContainerTask task) {
+        if (clickQueueBusy) {
+            // QUICK_MOVE leaves the carried item empty, so this gates to one click per tick
+            if (mc.player.containerMenu.getCarried().isEmpty()) {
+                clickQueueBusy = false;
+            }
+            return false;
+        }
+        if (mc.getConnection() == null || mc.player == null) return false;
+
+        // wait until the container menu is actually open before clicking its slots
+        if (mc.player.containerMenu.containerId == 0) return false;
+
+        for (int slot = 0; slot < 27; slot++) {
+            ItemStack stack = mc.player.containerMenu.getSlot(slot).getItem();
+            if (stack.getItem().equals(task.item)) {
+                mc.getConnection().send(new ServerboundContainerClickPacket(
+                    mc.player.containerMenu.containerId,
+                    mc.player.containerMenu.getStateId(),
+                    (short) slot,
+                    (byte) 0,
+                    ContainerInput.QUICK_MOVE,
+                    new Int2ObjectOpenHashMap<>(),
+                    HashedStack.create(mc.player.containerMenu.getCarried(), mc.getConnection().decoratedHashOpsGenenerator())));
+                clickQueueBusy = true;
+                task.stacksPulled++;
+                task.stopPull = true;
+                return true;
+            }
+        }
+        // no more of the item in the container
+        task.taskState = TaskState.BREAK;
+        return false;
+    }
+
+    private boolean shouldKeepPulling(ContainerTask task) {
+        // stop when the inventory has no room left for another stack
+        if (inventoryManager.freeSlots() <= 0) return false;
+        // fastFill: keep pulling for tools and the main building material
+        if (task.item.equals(Items.DIAMOND_PICKAXE)) return true;
+        return task.item.equals(tools.getMainBlock().get().asItem());
     }
 
 }

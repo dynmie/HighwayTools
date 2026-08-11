@@ -54,6 +54,8 @@ public class InventoryHandler {
         FindItemResult itemResult = InvUtils.find(item);
 
         if (!itemResult.found()) {
+            // trigger restock (deferred to next tick via the runnable queue)
+            tools.runNextTick(() -> tools.getTaskManager().needsRestockCheck());
             return -1;
         }
 
