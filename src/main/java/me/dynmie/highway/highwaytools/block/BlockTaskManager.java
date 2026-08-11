@@ -5,8 +5,11 @@ import me.dynmie.highway.highwaytools.container.ContainerTask;
 import me.dynmie.highway.highwaytools.handler.InventoryHandler;
 import me.dynmie.highway.highwaytools.handler.InventoryManager;
 import me.dynmie.highway.highwaytools.pathing.BaritonePathfinder;
+import me.dynmie.highway.highwaytools.place.PlacementSearcher;
+import me.dynmie.highway.highwaytools.place.PlacementStep;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.BlockUtils;
+import me.dynmie.highway.utils.LiquidUtils;
 import me.dynmie.highway.utils.LocationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -19,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +40,7 @@ public class BlockTaskManager {
     private final HighwayTools tools;
     private final InventoryHandler inventoryHandler;
     private final InventoryManager inventoryManager;
+    private final PlacementSearcher searcher;
 
     /** Active container restock task; runs inside the loop while non-null. */
     public ContainerTask containerTask = null;
@@ -44,6 +49,7 @@ public class BlockTaskManager {
         this.tools = tools;
         this.inventoryHandler = inventoryHandler;
         this.inventoryManager = tools.getInventoryManager();
+        this.searcher = new PlacementSearcher(tools);
         instance = this;
     }
 
@@ -89,6 +95,23 @@ public class BlockTaskManager {
         if (tools.getIgnoreList().isIgnored(currentBlock)) {
             BlockTask task = new BlockTask(pos, TaskState.DONE, blueprintTask);
             addTask(task);
+            return;
+        }
+
+        // liquid fill (mirrors Lambda's liquid branch): only create the task when a reachable,
+        // visible placement sequence exists. A liquid with no adjacent solid support, or whose
+        // support face the player cannot see (blocked by blocks just placed in front), would
+        // never resolve; skipping it lets the front advance so the fill is retried later.
+        if (LiquidUtils.isLiquid(blockState)) {
+            boolean illegal = tools.getIllegalPlacements().get();
+            List<PlacementStep> seq = searcher.findSequence(
+                mc.player.getEyePosition(), pos, tools.getPlacementSearch().get(), illegal);
+
+            if (!seq.isEmpty()) {
+                BlockTask task = new BlockTask(pos, TaskState.LIQUID, blueprintTask);
+                task.setSequence(seq);
+                addTask(task);
+            }
             return;
         }
 
