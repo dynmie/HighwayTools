@@ -153,6 +153,15 @@ public class HighwayTools extends Module {
         .build()
     );
 
+    private final Setting<Double> minDistance = sgGeneral.add(new DoubleSetting.Builder()
+        .name("min-container-distance")
+        .description("Avoid player movement collision with a placed restock container.")
+        .defaultValue(1.5d)
+        .min(0d)
+        .sliderMax(3d)
+        .build()
+    );
+
     private final Setting<Block> mainBlock = sgGeneral.add(new BlockSetting.Builder()
         .name("block-to-place")
         .description("Main block to place")
@@ -416,6 +425,11 @@ public class HighwayTools extends Module {
         .description("Prefer ender chests over shulkers for obsidian.")
         .defaultValue(false).build()
     );
+    private final Setting<Boolean> fastFill = sgStorage.add(new BoolSetting.Builder()
+        .name("fast-fill")
+        .description("Pull as many item stacks as possible into the inventory during restock.")
+        .defaultValue(true).build()
+    );
 
     private HorizontalDirection direction = HorizontalDirection.North;
 
@@ -660,6 +674,10 @@ public class HighwayTools extends Module {
         return reach;
     }
 
+    public Setting<Double> getMinDistance() {
+        return minDistance;
+    }
+
     public Setting<Block> getMainBlock() {
         return mainBlock;
     }
@@ -864,5 +882,9 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getPreferEnderChests() {
         return preferEnderChests;
+    }
+
+    public Setting<Boolean> getFastFill() {
+        return fastFill;
     }
 }

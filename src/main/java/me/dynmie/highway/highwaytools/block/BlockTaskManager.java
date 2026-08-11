@@ -45,6 +45,9 @@ public class BlockTaskManager {
     /** Active container restock task; runs inside the loop while non-null. */
     public ContainerTask containerTask = null;
 
+    /** Remaining ender-chest grinds (each yields 8 obsidian) before the bot stops. */
+    public int grindCycles = 0;
+
     public BlockTaskManager(HighwayTools tools, InventoryHandler inventoryHandler) {
         this.tools = tools;
         this.inventoryHandler = inventoryHandler;
@@ -164,9 +167,20 @@ public class BlockTaskManager {
         // progress and the overlay never freeze. Restock is triggered lazily per-task
         // (see InventoryHandler / BreakHandler), never as a gate in front of this loop.
         if (containerTask != null) {
+            // while the container is placed/opened/pulled, path to it (RESTOCK); once it is
+            // broken, path to the drops (PICKUP) so the bot walks over and collects them.
+            tools.getPathfinder().setMovementState(
+                containerTask.taskState == TaskState.PICKUP
+                    ? BaritonePathfinder.MovementState.PICKUP
+                    : BaritonePathfinder.MovementState.RESTOCK);
             tools.getTaskExecutor().doContainerTask(containerTask);
             updateBlockTasks();
             return;
+        }
+
+        // no container running — resume normal pathing
+        if (tools.getPathfinder().getMovementState() == BaritonePathfinder.MovementState.RESTOCK) {
+            tools.getPathfinder().setMovementState(BaritonePathfinder.MovementState.RUNNING);
         }
 
         updateBlockTasks();
@@ -175,6 +189,10 @@ public class BlockTaskManager {
         if (inventoryHandler.getWaitTicks() > 0) {
             inventoryHandler.decreaseWaitTicks(1);
         }
+
+        // proactive restock: run when the module needs material/tools, not only on a failed
+        // lookup. Mirrors Lambda's every-tick `handleRestock` gate.
+        needsRestockCheck();
 
         sortedTasks.clear();
         sortedTasks.addAll(blockTasks.values());
@@ -209,52 +227,129 @@ public class BlockTaskManager {
     }
 
     /**
-     * Kicks off the restock lifecycle: AutoObsidian (place + grind an ender chest) when the
-     * player is low on the main block, otherwise place a shulker containing the restock item,
-     * or open the ender chest directly when no shulker has the item.
+     * Kicks off the restock lifecycle — a faithful port of Lambda's
+     * {@code Container.handleRestock / handleEnderChest / dispatchEnderChest}.
+     *
+     * <p>Order of preference for obtaining {@code item}:
+     * <ol>
+     *   <li>prefer-ender-chests + obsidian → ender chest (grind or plain),</li>
+     *   <li>a shulker box in the inventory holding {@code item},</li>
+     *   <li>grind obsidian from an ender chest (AutoObsidian) when the budget allows,</li>
+     *   <li>restock ender chests first when low on them,</li>
+     *   <li>pull from the player's ender chest as a last resort.</li>
+     * </ol>
      */
     private void startRestock() {
         Item item = inventoryManager.restockItem();
 
-        // AutoObsidian: place an ender chest, restock from it, then break it for the obsidian
-        if (item == tools.getMainBlock().get().asItem() && tools.getGrindObsidian().get()
-            && inventoryManager.countBlock(Blocks.ENDER_CHEST) > tools.getSaveEnder().get()) {
-            BlockPos pos = inventoryManager.getRemotePos();
-            if (pos != null) {
-                containerTask = new ContainerTask(pos, TaskState.PLACE, Items.ENDER_CHEST);
-                containerTask.item = item;
-                containerTask.destroy = true;
-            }
+        // Case: prefer ender chests for obsidian
+        if (tools.getPreferEnderChests().get() && item == Blocks.OBSIDIAN.asItem()) {
+            handleEnderChest(item);
             return;
         }
 
+        // Case 1: item is in a shulker in the inventory
         ItemStack shulker = inventoryManager.getShulkerWith(item);
         if (!shulker.isEmpty()) {
             BlockPos pos = inventoryManager.getRemotePos();
             if (pos != null) {
                 containerTask = new ContainerTask(pos, TaskState.PLACE, item);
+            } else {
+                tools.error("Can't find possible container position (Case: 1)");
             }
             return;
         }
 
-        if (tools.getRestockFromEnderChest().get()) {
+        handleEnderChest(item);
+    }
+
+    /** Grinds / pulls from ender chests — Lambda's {@code Container.handleEnderChest}. */
+    private void handleEnderChest(Item item) {
+        boolean obsidian = item == Blocks.OBSIDIAN.asItem();
+
+        if (tools.getGrindObsidian().get() && obsidian) {
+            // Case 2: desired item is Obsidian and grinding is allowed
+
+            if (inventoryManager.countBlock(Blocks.ENDER_CHEST) <= tools.getSaveEnder().get()) {
+                // not enough ender chests to spare — restock ender chests first
+                replenishEnderChests();
+                return;
+            }
+
+            if (inventoryManager.countBlock(Blocks.ENDER_CHEST) > tools.getSaveEnder().get()) {
+                if (grindCycles > 0) {
+                    BlockPos pos = inventoryManager.getRemotePos();
+                    if (pos != null) {
+                        containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.OBSIDIAN.asItem());
+                        containerTask.destroy = true;
+                        if (grindCycles > 1) containerTask.collect = false;
+                        grindCycles--;
+                    } else {
+                        tools.error("Can't find possible container position (Case: 3)");
+                    }
+                } else {
+                    // budget exhausted — make room by compressing partial stacks
+                    int free = inventoryManager.freeSlots();
+                    int cycles = (free - 1) * 8;
+                    if (cycles > 0) {
+                        grindCycles = cycles;
+                    } else {
+                        inventoryManager.zipInventory();
+                    }
+                }
+            }
+            return;
+        }
+
+        // Case 3: last hope is the ender chest
+        if (!tools.getRestockFromEnderChest().get()) {
+            tools.error("Insufficient material. Enable Storage Management > Restock From Ender Chest to pull from your ender chest.");
+            return;
+        }
+
+        dispatchEnderChest(item);
+    }
+
+    /**
+     * Last-hope restock from the player's ender chest — Lambda's {@code dispatchEnderChest}.
+     * When the player has ender chests to spare, place one, open it and pull {@code desiredItem}
+     * out of the shared ender-chest inventory. Only when out of chests does it go to a shulker
+     * holding ender chests.
+     */
+    private void dispatchEnderChest(Item desiredItem) {
+        if (inventoryManager.countBlock(Blocks.ENDER_CHEST) > tools.getSaveEnder().get()) {
             BlockPos pos = inventoryManager.getRemotePos();
             if (pos != null) {
-                containerTask = new ContainerTask(pos, TaskState.OPEN_CONTAINER, item);
+                containerTask = new ContainerTask(pos, TaskState.PLACE, desiredItem);
+                containerTask.destroy = true; // place the ender chest itself, break it after pulling
+            } else {
+                tools.error("Can't find possible container position (Case: 4)");
             }
+            return;
         }
+
+        replenishEnderChests();
+    }
+
+    /** Restock ender chests from a shulker holding them — Lambda's {@code dispatchEnderChest} else-branch. */
+    private void replenishEnderChests() {
+        ItemStack shulker = inventoryManager.getShulkerWith(Blocks.ENDER_CHEST.asItem());
+        if (!shulker.isEmpty()) {
+            BlockPos pos = inventoryManager.getRemotePos();
+            if (pos != null) {
+                containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.ENDER_CHEST.asItem());
+            } else {
+                tools.error("Can't find possible container position (Case: 5)");
+            }
+            return;
+        }
+
+        tools.error("No ender chest was found in inventory.");
     }
 
     /** Re-check restock need, e.g. from {@link InventoryHandler} when a needed item is missing. */
     public void needsRestockCheck() {
         if (containerTask == null && inventoryManager.needsRestock()) {
-            startRestock();
-        }
-    }
-
-    /** Lazy tools restock (mirrors Lambda): request one when pickaxes are low, unless already running. */
-    public void needsToolsRestockCheck() {
-        if (containerTask == null && inventoryManager.needsRestockTools()) {
             startRestock();
         }
     }
@@ -282,6 +377,8 @@ public class BlockTaskManager {
 
     public void clearTasks() {
         blockTasks.clear();
+        containerTask = null;
+        grindCycles = 0;
     }
 
     private Comparator<BlockTask> getBlockTaskComparator() {

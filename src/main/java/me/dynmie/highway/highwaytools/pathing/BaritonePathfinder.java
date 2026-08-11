@@ -22,7 +22,7 @@ import java.util.Map;
 public class BaritonePathfinder {
 
     public enum MovementState {
-        RUNNING, BRIDGE, RESTOCK
+        RUNNING, BRIDGE, RESTOCK, PICKUP
     }
 
     private static final Minecraft mc = Minecraft.getInstance();
@@ -47,6 +47,47 @@ public class BaritonePathfinder {
         switch (movementState) {
             case RUNNING -> updateRunning();
             case BRIDGE -> updateBridge();
+            case RESTOCK -> updateRestock();
+            case PICKUP -> updatePickup();
+        }
+    }
+
+    private void updatePickup() {
+        ContainerTask containerTask = tools.getTaskManager().containerTask;
+        if (containerTask == null || containerTask.taskState != TaskState.PICKUP) {
+            movementState = MovementState.RUNNING;
+            return;
+        }
+        // path to the drop location while drops exist; pause once collected
+        BlockPos collectPos = tools.getInventoryManager().getCollectingPosition(containerTask.dropItem(), containerTask.blockPos);
+        if (collectPos != null) {
+            goal = collectPos;
+        } else {
+            goal = null;
+        }
+    }
+
+    private void updateRestock() {
+        ContainerTask containerTask = tools.getTaskManager().containerTask;
+        if (containerTask == null) {
+            movementState = MovementState.RUNNING;
+            goal = tools.getCurrentPosition();
+            return;
+        }
+
+        BlockPos target = containerTask.blockPos;
+        if (target == null) {
+            movementState = MovementState.RUNNING;
+            return;
+        }
+
+        // Path to the container until we're within reach, then pause so doContainerTask
+        // can place/open it (baritone keeps REQUEST_PAUSE while goal is null).
+        double distance = mc.player.position().distanceTo(target.getCenter());
+        if (distance > 2) {
+            goal = target;
+        } else {
+            goal = null;
         }
     }
 
@@ -169,7 +210,15 @@ public class BaritonePathfinder {
 
     public BlockPos getGoal() {
         // suppress the baritone goal while bridging so baritone requests a pause
-        return movementState == MovementState.BRIDGE ? null : goal;
+        if (movementState == MovementState.BRIDGE) return null;
+        // while picking up, return the collecting position so baritone walks to the drops;
+        // if the container task is already gone (done), pause rather than reuse a stale goal
+        if (movementState == MovementState.PICKUP) {
+            ContainerTask containerTask = tools.getTaskManager().containerTask;
+            if (containerTask == null) return null;
+            return tools.getInventoryManager().getCollectingPosition(containerTask.dropItem(), containerTask.blockPos);
+        }
+        return goal;
     }
 
     public MovementState getMovementState() {
