@@ -217,6 +217,13 @@ public class BlockTaskManager {
         }
     }
 
+    /** Re-check restock need, e.g. from {@link InventoryHandler} when a needed item is missing. */
+    public void needsRestockCheck() {
+        if (inventoryManager.needsRestock()) {
+            startRestock();
+        }
+    }
+
     public void addTask(BlockTask blockTask) {
         BlockTask otherTask = blockTasks.get(blockTask.getBlockPos());
         if (otherTask == null) {
