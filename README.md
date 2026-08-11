@@ -21,12 +21,12 @@ Created because the current highway tools built into Meteor is just plain terrib
 
 ### Dependencies
 - [Fabric Loader](https://fabricmc.net/)
-- [Meteor Client 1.21.4](https://meteorclient.com/)
-- [Baritone 1.21.4](https://github.com/cabaletta/baritone)
+- [Meteor Client 26.1](https://meteorclient.com/)
+- [Baritone 26.1](https://github.com/cabaletta/baritone) (`baritone-meteor`, published on the [Meteor Maven](https://maven.meteordev.org/snapshots/meteordevelopment/baritone/))
 
 ### Installation
-1. Install Fabric
-2. Add Meteor Client, Baritone, and MetroHighwayTools to your `mods` folder
+1. Install Fabric (requires Java 25)
+2. Add Meteor Client, Baritone, and HighwayTools to your `mods` folder
 3. Done!
 
 ## Todo
