@@ -9,6 +9,9 @@ public enum TaskState {
     PLACE(20, 20),
     PENDING_BREAK(100, 100),
     PENDING_PLACE(100, 100),
+    OPEN_CONTAINER(100, 100),
+    RESTOCK(100, 100),
+    PICKUP(100, 100),
     DONE(72727, 1);
 
     private final int stuckThreshold;
