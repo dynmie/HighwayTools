@@ -1,12 +1,17 @@
 package me.dynmie.highway.highwaytools.block;
 
 import me.dynmie.highway.highwaytools.blueprint.BlueprintTask;
+import me.dynmie.highway.highwaytools.container.ContainerTask;
 import me.dynmie.highway.highwaytools.handler.InventoryHandler;
+import me.dynmie.highway.highwaytools.handler.InventoryManager;
 import me.dynmie.highway.modules.HighwayTools;
 import me.dynmie.highway.utils.BlockUtils;
 import me.dynmie.highway.utils.LocationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,6 +25,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class BlockTaskManager {
 
+    private static BlockTaskManager instance;
+
     private final Minecraft mc = Minecraft.getInstance();
 
     private final Map<BlockPos, BlockTask> blockTasks = new ConcurrentHashMap<>();
@@ -27,10 +34,21 @@ public class BlockTaskManager {
 
     private final HighwayTools tools;
     private final InventoryHandler inventoryHandler;
+    private final InventoryManager inventoryManager;
+
+    /** Active container restock task; has priority over regular block tasks while non-null. */
+    public ContainerTask containerTask = null;
+    public boolean restocking = false;
 
     public BlockTaskManager(HighwayTools tools, InventoryHandler inventoryHandler) {
         this.tools = tools;
         this.inventoryHandler = inventoryHandler;
+        this.inventoryManager = tools.getInventoryManager();
+        instance = this;
+    }
+
+    public static BlockTaskManager getInstance() {
+        return instance;
     }
 
     public void updateTasks() {
@@ -127,6 +145,18 @@ public class BlockTaskManager {
             return;
         }
 
+        // RESTOCK GATE: container task has priority over normal block tasks
+        if (containerTask != null) {
+            tools.getTaskExecutor().doContainerTask(containerTask);
+            return;
+        }
+
+        if (inventoryManager.needsRestock() && !restocking) {
+            startRestock();
+            return;
+        }
+        restocking = false;
+
         for (BlockTask task : blockTasks.values()) {
             tools.getTaskExecutor().doTask(task, true);
 
@@ -146,6 +176,44 @@ public class BlockTaskManager {
                 continue;
             }
             return;
+        }
+    }
+
+    /**
+     * Kicks off the restock lifecycle: AutoObsidian (place + grind an ender chest) when the
+     * player is low on the main block, otherwise place a shulker containing the restock item,
+     * or open the ender chest directly when no shulker has the item.
+     */
+    private void startRestock() {
+        restocking = true;
+        Item item = inventoryManager.restockItem();
+
+        // AutoObsidian: place an ender chest, restock from it, then break it for the obsidian
+        if (item == tools.getMainBlock().get().asItem() && tools.getGrindObsidian().get()
+            && inventoryManager.countBlock(Blocks.ENDER_CHEST) > tools.getSaveEnder().get()) {
+            BlockPos pos = inventoryManager.getRemotePos();
+            if (pos != null) {
+                containerTask = new ContainerTask(pos, TaskState.PLACE, Items.ENDER_CHEST);
+                containerTask.item = item;
+                containerTask.destroy = true;
+            }
+            return;
+        }
+
+        ItemStack shulker = inventoryManager.getShulkerWith(item);
+        if (!shulker.isEmpty()) {
+            BlockPos pos = inventoryManager.getRemotePos();
+            if (pos != null) {
+                containerTask = new ContainerTask(pos, TaskState.PLACE, item);
+            }
+            return;
+        }
+
+        if (tools.getRestockFromEnderChest().get()) {
+            BlockPos pos = inventoryManager.getRemotePos();
+            if (pos != null) {
+                containerTask = new ContainerTask(pos, TaskState.OPEN_CONTAINER, item);
+            }
         }
     }
 
