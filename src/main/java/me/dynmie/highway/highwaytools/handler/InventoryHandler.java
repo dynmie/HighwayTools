@@ -24,7 +24,6 @@ public class InventoryHandler {
     private final HighwayTools tools;
 
     private int waitTicks = 0;
-    private int previousSlot = -1;
 
     public InventoryHandler(HighwayTools tools) {
         this.tools = tools;
@@ -32,10 +31,6 @@ public class InventoryHandler {
 
     public int getWaitTicks() {
         return waitTicks;
-    }
-
-    public int getPreviousSlot() {
-        return previousSlot;
     }
 
     public void setWaitTicks(int waitTicks) {
@@ -125,6 +120,14 @@ public class InventoryHandler {
 
     /**
      * Moves the best item to the best slot in the hotbar and returns it.
+     *
+     * <p>Uses {@link InvUtils#swap} instead of a bare {@code setSelectedSlot}: the swap
+     * also calls {@code meteor$syncSelected()} ({@code ensureHasSentCarriedItem}) so the
+     * server learns the newly held item, and it records the previous slot for later
+     * {@link InvUtils#swapBack} restore. Without the sync the server keeps breaking at the
+     * speed of the previously held slot, making mining appear much slower than the client
+     * predicts.
+     *
      * @param state The block state to calculate the best tool.
      * @return The slot with the best item.
      */
@@ -145,9 +148,7 @@ public class InventoryHandler {
             slot = bestSlot;
         }
 
-        int prev = mc.player.getInventory().getSelectedSlot();
-        mc.player.getInventory().setSelectedSlot(slot);
-        previousSlot = prev;
+        InvUtils.swap(slot, true);
         return slot;
     }
 

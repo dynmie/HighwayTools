@@ -4,6 +4,7 @@ import me.dynmie.highway.highwaytools.block.BlockTask;
 import me.dynmie.highway.highwaytools.block.TaskState;
 import me.dynmie.highway.mixin.MultiPlayerGameModeAccessor;
 import me.dynmie.highway.modules.HighwayTools;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
@@ -45,9 +46,9 @@ public class BreakHandler {
         // (deferred to next tick) but keep mining with the best available tool in the meantime
         tools.getTaskManager().needsToolsRestockCheck();
 
-        // select the best tool for this block and hold it for the whole mine
+        // select the best tool for this block and hold it for the whole mine.
+        // prepareToolInHotbar uses InvUtils.swap which syncs the held item to the server.
         int slot = inventoryHandler.prepareToolInHotbar(blockState);
-        mc.player.getInventory().setSelectedSlot(slot);
 
         TaskState state = task.getTaskState();
 
@@ -79,10 +80,7 @@ public class BreakHandler {
                 if (!tools.getAvoidMineGhostBlocks().get()) {
                     BlockUtils.breakBlock(pos, true);
                 }
-                int prev = inventoryHandler.getPreviousSlot();
-                if (prev != -1) {
-                    mc.player.getInventory().setSelectedSlot(prev);
-                }
+                InvUtils.swapBack();
                 task.updateState(TaskState.PENDING_BREAK);
             } else if (elapsed > 10) {
                 // progress stalled for 10+ ticks — re-send START to unstick the dig
