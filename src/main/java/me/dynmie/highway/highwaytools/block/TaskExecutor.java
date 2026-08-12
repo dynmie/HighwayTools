@@ -650,7 +650,12 @@ public class TaskExecutor {
     /**
      * The single-click move for this pull, or null. Order mirrors Lambda's moveToInventory:
      * QUICK_MOVE into a matching partial that has room for the whole stack, then SWAP into a
-     * free/empty hotbar (0..8). Main slots go through the PICKUP carry fallback.
+     * free/empty hotbar slot. Main slots go through the PICKUP carry fallback.
+     *
+     * <p>Trash is only ever a last resort: the pull fills genuinely empty slots first and only
+     * swaps away an eject-list item when no empty slot remains (and even then, only a hotbar
+     * slot — SWAP cannot target a main slot in modern MC). This is the "fill the inventory, only
+     * then eject real trash" behavior.
      */
     private int[] findMove(ContainerTask task) {
         if (mc.player == null) return null;
@@ -666,10 +671,15 @@ public class TaskExecutor {
                 return new int[]{origin, 0, ContainerInput.QUICK_MOVE.ordinal()};
             }
         }
-        // SWAP only targets hotbar slots (button is an inventory hotbar index 0..8)
+        // SWAP only targets hotbar slots (button is an inventory hotbar index 0..8).
+        // Prefer empty hotbar slots; only fall back to eject-list trash when nothing is empty.
         for (int slot = 54; slot < 63; slot++) {
-            ItemStack stack = mc.player.containerMenu.getSlot(slot).getItem();
-            if (stack.isEmpty() || inventoryManager.isEjectableSlot(slot)) {
+            if (mc.player.containerMenu.getSlot(slot).getItem().isEmpty()) {
+                return new int[]{origin, hotbarIndex(slot), ContainerInput.SWAP.ordinal()};
+            }
+        }
+        for (int slot = 54; slot < 63; slot++) {
+            if (inventoryManager.isEjectableSlot(slot)) {
                 return new int[]{origin, hotbarIndex(slot), ContainerInput.SWAP.ordinal()};
             }
         }
@@ -685,12 +695,11 @@ public class TaskExecutor {
         return -1;
     }
 
-    /** A free or empty main-inventory slot (menu 27..53) to set a pulled stack down in. */
+    /** A free (empty) main-inventory slot (menu 27..53) to set a pulled stack down in. */
     private int mainFreeOrEmpty(ContainerTask task) {
         if (mc.player == null) return -1;
         for (int slot = 27; slot < 54; slot++) {
-            ItemStack stack = mc.player.containerMenu.getSlot(slot).getItem();
-            if (stack.isEmpty() || inventoryManager.isEjectableSlot(slot)) return slot;
+            if (mc.player.containerMenu.getSlot(slot).getItem().isEmpty()) return slot;
         }
         return -1;
     }

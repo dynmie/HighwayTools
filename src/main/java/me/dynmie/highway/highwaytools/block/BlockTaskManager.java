@@ -226,8 +226,12 @@ public class BlockTaskManager {
         }
     }
 
+    private void startRestock() {
+        startRestock(inventoryManager.restockItem());
+    }
+
     /**
-     * Kicks off the restock lifecycle — a faithful port of Lambda's
+     * Kicks off the restock lifecycle for a specific item — a faithful port of Lambda's
      * {@code Container.handleRestock / handleEnderChest / dispatchEnderChest}.
      *
      * <p>Order of preference for obtaining {@code item}:
@@ -239,9 +243,7 @@ public class BlockTaskManager {
      *   <li>pull from the player's ender chest as a last resort.</li>
      * </ol>
      */
-    private void startRestock() {
-        Item item = inventoryManager.restockItem();
-
+    private void startRestock(Item item) {
         // Case: prefer ender chests for obsidian
         if (tools.getPreferEnderChests().get() && item == Blocks.OBSIDIAN.asItem()) {
             handleEnderChest(item);
@@ -362,7 +364,22 @@ public class BlockTaskManager {
 
     /** Re-check restock need, e.g. from {@link InventoryHandler} when a needed item is missing. */
     public void needsRestockCheck() {
-        if (containerTask == null && inventoryManager.needsRestock()) {
+        if (containerTask != null) return;
+
+        /* Restock obsidian while the grind budget remains — Lambda's TaskManager.kt:200-202:
+           `storageManagement && grindCycles > 0 && material == Blocks.OBSIDIAN` →
+           handleRestock(material.item). This is what CHAINS consecutive ender-chest grinds:
+           after each container task completes (DONE clears containerTask) the branch fires
+           again and spawns the next grind immediately, so the bot mines chest after chest
+           without returning to the build loop until the budget drains — at which point the
+           freeSlots-based recharge in handleEnderChest yields ~0 cycles (inventory is full of
+           obsidian) and building resumes. */
+        if (grindCycles > 0 && tools.getMainBlock().get() == Blocks.OBSIDIAN) {
+            startRestock(Blocks.OBSIDIAN.asItem());
+            return;
+        }
+
+        if (inventoryManager.needsRestock()) {
             startRestock();
         }
     }

@@ -30,6 +30,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
@@ -429,6 +431,16 @@ public class HighwayTools extends Module {
         .name("fast-fill")
         .description("Pull as many item stacks as possible into the inventory during restock.")
         .defaultValue(true).build()
+    );
+    private final Setting<List<Item>> ejectList = sgStorage.add(new ItemListSetting.Builder()
+        .name("eject-list")
+        .description("Items considered trash — the only items the bot will swap away / drop to make room. " +
+            "Everything not in this list is preserved during a restock pull and never ejected, even when " +
+            "the inventory is full.")
+        .defaultValue(List.of(
+            Items.GRASS_BLOCK.asItem(), Items.DIRT, Items.NETHERRACK, Items.GRAVEL, Items.SAND,
+            Items.STONE, Items.COBBLESTONE))
+        .build()
     );
 
     private HorizontalDirection direction = HorizontalDirection.North;
@@ -886,5 +898,9 @@ public class HighwayTools extends Module {
 
     public Setting<Boolean> getFastFill() {
         return fastFill;
+    }
+
+    public Setting<List<Item>> getEjectList() {
+        return ejectList;
     }
 }

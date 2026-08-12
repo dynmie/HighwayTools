@@ -220,16 +220,16 @@ public class InventoryManager {
     /**
      * Spare inventory slots (hotbar + main) minus one reserved slot for the container that
      * will be picked back up (shulker box / ender chest drop) minus the keep-free-slots margin
-     * — Lambda's {@code count - 1 - keepFreeSlots} in doRestock. Empty slots AND ejectable
-     * (trash) slots count as room, because a pull can swap trash away to make space (Lambda's
-     * {@code moveToInventory}). Without the reserved slot, a restock that filled the inventory
-     * exactly would have nowhere for the box and the pickup would stall.
+     * — Lambda's {@code count - 1 - keepFreeSlots} in doRestock. ONLY genuinely empty slots
+     * count as room: an ejectable (trash) slot is preserved — it is not space the box can use,
+     * because the box drop must land in a slot that is empty (or merge into the matching stack),
+     * not one occupied by a kept item. This is what prevents the container pickup from stalling
+     * when the inventory is full of non-trash.
      */
     public int freeSlots() {
         int free = 0;
         for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = mc.player.getInventory().getItem(i);
-            if (stack.isEmpty() || isEjectable(stack)) free++;
+            if (mc.player.getInventory().getItem(i).isEmpty()) free++;
         }
         return Math.max(0, free - 1 - tools.getKeepFreeSlots().get());
     }
@@ -247,9 +247,10 @@ public class InventoryManager {
     }
 
     /**
-     * An inventory slot (hotbar + main) holding a "trash" item — anything that is not the main
-     * material, not a pickaxe, not a shulker, not an ender chest. Used to free a slot when the
-     * inventory is full during drop pickup. Mirrors Lambda's {@code Inventory.getEjectSlot}.
+     * An inventory slot (hotbar + main) holding a "trash" item. ONLY items in the user's
+     * {@code eject-list} setting are ever dropped to make room — tools, food, and anything else
+     * not in the list are preserved even when the inventory is full. Mirrors Lambda's
+     * {@code Inventory.getEjectSlot} (a slot whose item is in {@code ejectList}).
      */
     public int findEjectSlot() {
         for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
@@ -259,20 +260,13 @@ public class InventoryManager {
     }
 
     /**
-     * True when the stack is a "trash" item — not the main material, not a pickaxe, not a
-     * shulker, not an ender chest. Mirrors Lambda's {@code InventoryManager.ejectList} test
-     * (the items that are safe to swap away / drop to make room).
+     * True when the stack is a "trash" item — its item is in the user's {@code eject-list}.
+     * Mirrors Lambda's {@code ejectList.contains(...)} test used for swap targets and eject
+     * slots. Only listed items are ever swapped away / dropped to make room.
      */
     private boolean isEjectable(ItemStack stack) {
         if (stack.isEmpty()) return false;
-        Item item = stack.getItem();
-        Block mainBlock = tools.getMainBlock().get();
-        boolean isBlock = item instanceof BlockItem bi && bi.getBlock().equals(mainBlock);
-        boolean isPickaxe = stack.get(DataComponents.TOOL) != null
-            && stack.get(DataComponents.TOOL).isCorrectForDrops(Blocks.OBSIDIAN.defaultBlockState());
-        boolean isShulker = item instanceof BlockItem bi2 && bi2.getBlock() instanceof ShulkerBoxBlock;
-        boolean isEnderChest = item == Items.ENDER_CHEST;
-        return !isBlock && !isPickaxe && !isShulker && !isEnderChest;
+        return tools.getEjectList().get().contains(stack.getItem());
     }
 
     /**
