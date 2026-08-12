@@ -248,12 +248,13 @@ public class BlockTaskManager {
             return;
         }
 
-        // Case 1: item is in a shulker in the inventory
+        // Case 1: item is in a shulker in the inventory — place that shulker (Lambda's
+        // `BlockTask(pos, PLACE, slot.stack.item.block, item = item)`)
         ItemStack shulker = inventoryManager.getShulkerWith(item);
         if (!shulker.isEmpty()) {
             BlockPos pos = inventoryManager.getRemotePos();
             if (pos != null) {
-                containerTask = new ContainerTask(pos, TaskState.PLACE, item);
+                containerTask = new ContainerTask(pos, TaskState.PLACE, item, shulkerItemBlock(shulker));
             } else {
                 tools.error("Can't find possible container position (Case: 1)");
             }
@@ -280,7 +281,7 @@ public class BlockTaskManager {
                 if (grindCycles > 0) {
                     BlockPos pos = inventoryManager.getRemotePos();
                     if (pos != null) {
-                        containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.OBSIDIAN.asItem());
+                        containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.OBSIDIAN.asItem(), Blocks.ENDER_CHEST);
                         containerTask.destroy = true;
                         if (grindCycles > 1) containerTask.collect = false;
                         grindCycles--;
@@ -288,9 +289,10 @@ public class BlockTaskManager {
                         tools.error("Can't find possible container position (Case: 3)");
                     }
                 } else {
-                    // budget exhausted — make room by compressing partial stacks
-                    int free = inventoryManager.freeSlots();
-                    int cycles = (free - 1) * 8;
+                    // budget exhausted — each grind yields 8 obsidian per free slot (freeSlots()
+                    // already reserves the container-pickup slot and the keep-free margin, so
+                    // this matches Lambda's `(freeSlots - 1 - keepFreeSlots) * 8`)
+                    int cycles = inventoryManager.freeSlots() * 8;
                     if (cycles > 0) {
                         grindCycles = cycles;
                     } else {
@@ -320,8 +322,9 @@ public class BlockTaskManager {
         if (inventoryManager.countBlock(Blocks.ENDER_CHEST) > tools.getSaveEnder().get()) {
             BlockPos pos = inventoryManager.getRemotePos();
             if (pos != null) {
-                containerTask = new ContainerTask(pos, TaskState.PLACE, desiredItem);
-                containerTask.destroy = true; // place the ender chest itself, break it after pulling
+                // Lambda dispatchEnderChest: place the ender chest, open it, pull desiredItem
+                // from the shared ender storage, then break it — destroy stays FALSE here
+                containerTask = new ContainerTask(pos, TaskState.PLACE, desiredItem, Blocks.ENDER_CHEST);
             } else {
                 tools.error("Can't find possible container position (Case: 4)");
             }
@@ -337,7 +340,8 @@ public class BlockTaskManager {
         if (!shulker.isEmpty()) {
             BlockPos pos = inventoryManager.getRemotePos();
             if (pos != null) {
-                containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.ENDER_CHEST.asItem());
+                // Lambda: place the shulker holding the ender chests, pull ender chests out, break + pick up
+                containerTask = new ContainerTask(pos, TaskState.PLACE, Blocks.ENDER_CHEST.asItem(), shulkerItemBlock(shulker));
             } else {
                 tools.error("Can't find possible container position (Case: 5)");
             }
@@ -345,6 +349,15 @@ public class BlockTaskManager {
         }
 
         tools.error("No ender chest was found in inventory.");
+    }
+
+    /** The {@link net.minecraft.world.level.block.ShulkerBoxBlock} a shulker box item places. */
+    private static Block shulkerItemBlock(ItemStack shulker) {
+        if (shulker.getItem() instanceof net.minecraft.world.item.BlockItem bi
+            && bi.getBlock() instanceof net.minecraft.world.level.block.ShulkerBoxBlock sbb) {
+            return sbb;
+        }
+        return Blocks.ENDER_CHEST;
     }
 
     /** Re-check restock need, e.g. from {@link InventoryHandler} when a needed item is missing. */

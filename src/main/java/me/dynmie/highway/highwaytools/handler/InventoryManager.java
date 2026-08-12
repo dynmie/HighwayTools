@@ -217,13 +217,21 @@ public class InventoryManager {
             || findBestPickaxeCount() <= tools.getSaveTools().get();
     }
 
-    /** Spare inventory slots (main 27, index 9..35) excluding the keep-free-slots margin. */
+    /**
+     * Spare inventory slots (hotbar + main) minus one reserved slot for the container that
+     * will be picked back up (shulker box / ender chest drop) minus the keep-free-slots margin
+     * — Lambda's {@code count - 1 - keepFreeSlots} in doRestock. Empty slots AND ejectable
+     * (trash) slots count as room, because a pull can swap trash away to make space (Lambda's
+     * {@code moveToInventory}). Without the reserved slot, a restock that filled the inventory
+     * exactly would have nowhere for the box and the pickup would stall.
+     */
     public int freeSlots() {
         int free = 0;
-        for (int i = 9; i < mc.player.getInventory().getContainerSize(); i++) {
-            if (mc.player.getInventory().getItem(i).isEmpty()) free++;
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = mc.player.getInventory().getItem(i);
+            if (stack.isEmpty() || isEjectable(stack)) free++;
         }
-        return Math.max(0, free - tools.getKeepFreeSlots().get());
+        return Math.max(0, free - 1 - tools.getKeepFreeSlots().get());
     }
 
     /**
@@ -244,19 +252,37 @@ public class InventoryManager {
      * inventory is full during drop pickup. Mirrors Lambda's {@code Inventory.getEjectSlot}.
      */
     public int findEjectSlot() {
-        Block mainBlock = tools.getMainBlock().get();
         for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = mc.player.getInventory().getItem(i);
-            if (stack.isEmpty()) continue;
-            Item item = stack.getItem();
-            boolean isBlock = item instanceof BlockItem bi && bi.getBlock().equals(mainBlock);
-            boolean isPickaxe = stack.get(DataComponents.TOOL) != null
-                && stack.get(DataComponents.TOOL).isCorrectForDrops(Blocks.OBSIDIAN.defaultBlockState());
-            boolean isShulker = item instanceof BlockItem bi2 && bi2.getBlock() instanceof ShulkerBoxBlock;
-            boolean isEnderChest = item == Items.ENDER_CHEST;
-            if (!isBlock && !isPickaxe && !isShulker && !isEnderChest) return i;
+            if (isEjectable(mc.player.getInventory().getItem(i))) return i;
         }
         return -1;
+    }
+
+    /**
+     * True when the stack is a "trash" item — not the main material, not a pickaxe, not a
+     * shulker, not an ender chest. Mirrors Lambda's {@code InventoryManager.ejectList} test
+     * (the items that are safe to swap away / drop to make room).
+     */
+    private boolean isEjectable(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        Block mainBlock = tools.getMainBlock().get();
+        boolean isBlock = item instanceof BlockItem bi && bi.getBlock().equals(mainBlock);
+        boolean isPickaxe = stack.get(DataComponents.TOOL) != null
+            && stack.get(DataComponents.TOOL).isCorrectForDrops(Blocks.OBSIDIAN.defaultBlockState());
+        boolean isShulker = item instanceof BlockItem bi2 && bi2.getBlock() instanceof ShulkerBoxBlock;
+        boolean isEnderChest = item == Items.ENDER_CHEST;
+        return !isBlock && !isPickaxe && !isShulker && !isEnderChest;
+    }
+
+    /**
+     * Whether a container-menu slot (27..62) holds an ejectable item. Menu slot ids match the
+     * inventory indices (main 27..53 = index 27..35, hotbar 54..62 = index 0..8), so this is
+     * just {@link #isEjectable(ItemStack)} on the slot's stack.
+     */
+    public boolean isEjectableSlot(int menuSlot) {
+        if (mc.player == null || menuSlot < 27 || menuSlot > 62) return false;
+        return isEjectable(mc.player.containerMenu.getSlot(menuSlot).getItem());
     }
 
     /**
