@@ -512,10 +512,17 @@ public class TaskExecutor {
                         meteordevelopment.meteorclient.utils.player.InvUtils.drop().slot(ejectSlot);
                     }
                 }
+
                 // once no drops remain (collected), finish
                 if (inventoryManager.getCollectingPosition(task.dropItem(), task.blockPos) == null) {
                     task.taskState = TaskState.DONE;
+                    return;
                 }
+                // drops still remain and nothing was collected this tick — Lambda's doPickup
+                // calls onStuck() every incomplete tick, which feeds the container-task stuck
+                // timeout that aborts a pickup that can never complete (e.g. inventory full of
+                // kept items with no ejectable trash, or an unreachable drop).
+                task.stuckTicks++;
             }
             case DONE -> {
                 BlockTaskManager.getInstance().containerTask = null;

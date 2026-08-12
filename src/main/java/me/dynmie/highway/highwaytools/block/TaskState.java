@@ -12,7 +12,7 @@ public enum TaskState {
     IMPOSSIBLE_PLACE(20, 20),
     OPEN_CONTAINER(100, 100),
     RESTOCK(100, 100),
-    PICKUP(100, 100),
+    PICKUP(500, 500),
     DONE(72727, 1);
 
     private final int stuckThreshold;

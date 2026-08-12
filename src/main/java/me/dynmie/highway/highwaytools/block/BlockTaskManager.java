@@ -173,6 +173,21 @@ public class BlockTaskManager {
                 containerTask.taskState == TaskState.PICKUP
                     ? BaritonePathfinder.MovementState.PICKUP
                     : BaritonePathfinder.MovementState.RESTOCK);
+
+            // Abort a container task stuck past its state's timeout (Lambda TaskManager.kt:171-176).
+            // Without this, an unreachable pickup or an inventory genuinely full of kept items would
+            // stall the whole module forever — Lambda bails to DONE and lets the module retry later.
+            if (containerTask.stuckTicks > containerTask.taskState.getStuckTimeout()) {
+                if (containerTask.taskState == TaskState.PICKUP) {
+                    tools.getPathfinder().setMovementState(BaritonePathfinder.MovementState.RUNNING);
+                }
+                tools.error("Container task stuck in " + containerTask.taskState
+                    + " for " + containerTask.stuckTicks + " ticks, aborting");
+                containerTask.taskState = TaskState.DONE;
+                updateBlockTasks();
+                return;
+            }
+
             tools.getTaskExecutor().doContainerTask(containerTask);
             updateBlockTasks();
             return;

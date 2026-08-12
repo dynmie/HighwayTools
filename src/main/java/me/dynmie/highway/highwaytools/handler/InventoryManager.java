@@ -248,13 +248,6 @@ public class InventoryManager {
     }
 
     /**
-     * True when no inventory slot (hotbar + main 36) is empty.
-     */
-    public boolean isInventoryFull() {
-        return emptySlots() == 0;
-    }
-
-    /**
      * An inventory slot (hotbar + main) holding a "trash" item. ONLY items in the user's
      * {@code eject-list} setting are ever dropped to make room — tools, food, and anything else
      * not in the list are preserved even when the inventory is full. Mirrors Lambda's
