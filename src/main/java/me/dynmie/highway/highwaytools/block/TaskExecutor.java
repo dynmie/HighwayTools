@@ -497,11 +497,16 @@ public class TaskExecutor {
                     return;
                 }
 
-                // walk to the drops and pick them up; eject trash if the inventory is genuinely
-                // full — Lambda's doPickup gate (`firstEmpty() == null`). The dropped item can't
-                // be re-picked for 20 ticks (throw pickup-delay), so this is naturally bounded
-                // and needs no separate timer.
-                if (inventoryManager.isInventoryFull()) {
+                // walk to the drops and pick them up. Guarantee the container's own drop (the
+                // shulker box / the ground obsidian) has an empty slot to land in BEFORE the
+                // vacuum starts: the pickup area may already hold litter, which is vacuumed up
+                // first into the same empty slot the box needs. When fewer than 2 empty slots
+                // remain (one for the box, one for whatever litter is already on the ground),
+                // eject a listed-trash slot so there is always room for the box. Only items in
+                // the eject-list are ever dropped — everything else is preserved even when full.
+                // The dropped item can't be re-picked for 20 ticks (throw pickup-delay), so the
+                // eject is naturally throttled and needs no separate timer.
+                if (inventoryManager.emptySlots() < 2) {
                     int ejectSlot = inventoryManager.findEjectSlot();
                     if (ejectSlot != -1) {
                         meteordevelopment.meteorclient.utils.player.InvUtils.drop().slot(ejectSlot);

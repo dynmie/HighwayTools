@@ -123,16 +123,20 @@ public class InventoryManager {
     /**
      * A position near the dropped items of {@code item} that the player can stand in to
      * collect them — an air block with air above and replaceable ground, closest to the drops.
-     * Mirrors Lambda's {@code Container.getCollectingPosition()}.
+     * Mirrors Lambda's {@code Container.getCollectingPosition()}, whose {@code getDroppedItems}
+     * searches all loaded item entities of that type within range OF THE PLAYER (not of the
+     * container). The player-proximity scope is what lets the final grind collect the obsidian
+     * piles left by every mid-chain grind as it walks, instead of only the drops nearest to the
+     * last container. {@code nearPos} is retained for caller compatibility but unused.
      */
     public BlockPos getCollectingPosition(Item item, BlockPos nearPos) {
         if (mc.level == null || mc.player == null) return null;
         double range = 8f;
 
-        // nearest item entity of the desired type within range of the broken container
+        // nearest item entity of the desired type within range of the player
         net.minecraft.world.entity.item.ItemEntity nearest = mc.level.getEntities(
                 net.minecraft.world.level.entity.EntityTypeTest.forClass(net.minecraft.world.entity.item.ItemEntity.class),
-                new net.minecraft.world.phys.AABB(nearPos).inflate(range),
+                new net.minecraft.world.phys.AABB(mc.player.position(), mc.player.position()).inflate(range),
                 e -> !e.getItem().isEmpty() && e.getItem().is(item))
             .stream()
             .min(java.util.Comparator.comparingDouble(e -> e.position().distanceToSqr(mc.player.position())))
@@ -234,16 +238,20 @@ public class InventoryManager {
         return Math.max(0, free - 1 - tools.getKeepFreeSlots().get());
     }
 
+    /** Number of genuinely empty inventory slots (hotbar + main 36). */
+    public int emptySlots() {
+        int n = 0;
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+            if (mc.player.getInventory().getItem(i).isEmpty()) n++;
+        }
+        return n;
+    }
+
     /**
-     * True when no inventory slot (hotbar + main 36) is empty. This is the gate Lambda's
-     * {@code doPickup} uses before ejecting trash — unlike {@link #freeSlots()} it ignores the
-     * keep-free margin, because during pickup the room is needed for drops, not for a pull.
+     * True when no inventory slot (hotbar + main 36) is empty.
      */
     public boolean isInventoryFull() {
-        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
-            if (mc.player.getInventory().getItem(i).isEmpty()) return false;
-        }
-        return true;
+        return emptySlots() == 0;
     }
 
     /**
