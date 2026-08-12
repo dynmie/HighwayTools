@@ -48,13 +48,6 @@ public class DiagonalBlueprintProvider implements BlueprintProvider {
             }
         }
 
-        if (tools.getCornerBlock().get() && width > 2) {
-            // leading corner: front-center, at the height of the front wall
-            ret.add(basePosition
-                .offset(tools.getDirection().offsetX, 0, tools.getDirection().offsetZ)  // one ahead
-                .above(height - 1));
-        }
-
         return ret;
     }
 
@@ -111,6 +104,13 @@ public class DiagonalBlueprintProvider implements BlueprintProvider {
             .offset(tools.getLeftDirection().rotateLeft());
 
         ret.add(new BlockPos(rightRailing.x, rightRailing.y, rightRailing.z));
+
+        if (tools.getCornerBlock().get() && tools.getWidth().get() > 2) {
+            // bottom-left / bottom-right corners: the block directly under each railing, so the
+            // wall columns reach down to the floor. With it off the walls float above a gap.
+            ret.add(new BlockPos(leftRailing.x, leftRailing.y - 1, leftRailing.z));
+            ret.add(new BlockPos(rightRailing.x, rightRailing.y - 1, rightRailing.z));
+        }
 
         return ret;
     }

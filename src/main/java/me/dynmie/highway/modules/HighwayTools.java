@@ -118,7 +118,8 @@ public class HighwayTools extends Module {
 
     private final Setting<Boolean> cornerBlock = sgGeneral.add(new BoolSetting.Builder()
         .name("corner-block")
-        .description("Build a corner block at the highway's leading edge when width is larger than 2.")
+        .description("Builds the bottom-left and bottom-right corners of the blueprint (the block under each railing). " +
+            "On, the highway is a U shape; off, the walls float above a gap (V shape).")
         .defaultValue(true)
         .visible(() -> width.get() > 2)
         .build()

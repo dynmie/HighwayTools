@@ -29,31 +29,6 @@ Created because the current highway tools built into Meteor is just plain terrib
 2. Add Meteor Client, Baritone, and HighwayTools to your `mods` folder
 3. Done!
 
-## Storage Management
-
-When the module runs low on material or tools, it restocks automatically. The source is chosen by priority:
-
-1. **Grind obsidian** from ender chests (AutoObsidian) — places an ender chest, mines its 8 obsidian, chains consecutive grinds until the inventory is full of obsidian, then resumes building.
-2. A **shulker box** in the inventory holding the needed item — places it, pulls the item out, then breaks and picks the box back up.
-3. The player's **ender chest** (shared storage).
-
-Settings live under **Storage Management**:
-
-| Setting | What it does |
-| --- | --- |
-| `save-material` | Never use the last N material blocks (restock when at/below). |
-| `save-tools` | Restock pickaxes when at/below this many. |
-| `save-ender` | Keep this many ender chests before grinding/breaking extras. |
-| `grind-obsidian` | Grind obsidian from ender chests (AutoObsidian). |
-| `restock-from-ender-chest` | Pull material from ender chests when no shulker has it. |
-| `keep-free-slots` | Keep this many inventory slots empty during restock. |
-| `leave-empty-shulkers` | Close and skip shulkers that are empty (instead of breaking them). |
-| `prefer-ender-chests` | Prefer ender chests over shulkers for obsidian. |
-| `fast-fill` | Pull as many item stacks as possible during restock. |
-| `eject-list` | Items considered trash — the only items the bot will drop/swap away to make room. |
-
-During restock the bot fills genuinely empty slots first and only swaps away a listed trash item when no empty slot remains, so kept items (tools, food, etc.) are preserved. A slot is reserved for the container pickup so ground litter can't occupy it.
-
 ## Todo
 - [x] Basic mining and placing
 - [x] Task shuffle for multi-player building
