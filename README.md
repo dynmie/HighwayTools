@@ -8,21 +8,21 @@
 A port of [Meteor](https://github.com/MeteorDevelopment/meteor-client)'s and [Lambda](https://github.com/lambda-plugins/HighwayTools)'s highway tools.
 
 
-You can find a demonstration video [here](https://www.youtube.com/watch?v=SsU_WlwD_mo).
+You can find an (old) demonstration video [here](https://www.youtube.com/watch?v=SsU_WlwD_mo).
 
 ## About
 An attempt to add a fully automated highway building robot to Meteor client.
 Created because the current highway tools built into Meteor is just plain terrible.
 
-> [!CAUTION]
-> This addon is not finished! There are bugs, and they are very big. Use at your own risk.
+> [!WARNING]
+> No support will be given to those running a non-latest HighwayTools version. If you are running an old version, please update for merged bug fixes and newer features. If you need to join a server on an older Minecraft version and require an older HighwayTools version for compatibility, consider using [ViaFabric](https://modrinth.com/mod/viafabric) alongside Minecraft 26.1.X.
 
 ## Setting up
 
 ### Dependencies
 - [Fabric Loader](https://fabricmc.net/)
 - [Meteor Client 26.1](https://meteorclient.com/)
-- [Baritone 26.1](https://github.com/cabaletta/baritone) (`baritone-meteor`, published on the [Meteor Maven](https://maven.meteordev.org/snapshots/meteordevelopment/baritone/))
+- [Baritone 26.1](https://github.com/cabaletta/baritone)
 
 ### Installation
 1. Install Fabric (requires Java 25)
