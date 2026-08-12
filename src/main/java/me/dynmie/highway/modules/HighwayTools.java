@@ -70,8 +70,8 @@ public class HighwayTools extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgMine = settings.createGroup("Mine");
     private final SettingGroup sgPlace = settings.createGroup("Place");
-    private final SettingGroup sgDebug = settings.createGroup("Debug");
     private final SettingGroup sgStorage = settings.createGroup("Storage Management");
+    private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     // General
 
@@ -390,7 +390,7 @@ public class HighwayTools extends Module {
     private final Setting<Integer> saveMaterial = sgStorage.add(new IntSetting.Builder()
         .name("save-material")
         .description("Never use the last N material blocks (restock when at/below).")
-        .defaultValue(64).range(0, 1728).sliderRange(0, 1728).build()
+        .defaultValue(32).range(0, 1728).sliderRange(0, 320).build()
     );
     private final Setting<Integer> saveTools = sgStorage.add(new IntSetting.Builder()
         .name("save-tools")

@@ -63,7 +63,7 @@ During restock the bot fills genuinely empty slots first and only swaps away a l
 - [x] Choose best tool to mine block by score
 - [x] Ignore a list of blocks to avoid breaking them
 - [x] Highway, Tunnel, and Flat blueprint modes
-- [ ] Corner blocks
+- [x] Corner blocks
 - [x] Intelligent placing by block side
 - [x] Deep search for placing
 - [x] Scaffold/bridge if block side view is not visible
