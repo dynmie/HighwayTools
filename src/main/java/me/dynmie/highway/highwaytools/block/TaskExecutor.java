@@ -574,9 +574,9 @@ public class TaskExecutor {
      * Pulls one stack of {@code task.item} out of the container per tick, mirroring Lambda's
      * {@code Inventory.moveToInventory}: QUICK_MOVE into a mergeable partial stack, else SWAP
      * the container item into a free/empty hotbar slot, else PICKUP the container item into the
-     * carry and set it down in a free/empty main slot. Ejectable (trash) slots are used as
-     * swap targets first, so ejectables are PRESERVED (swapped into the container) rather than
-     * dropped — Lambda never throws away ejectables during a restock pull.
+     * carry and set it down in a free/empty main slot. Eject-list (trash) slots are used as swap
+     * targets ONLY as a last resort after empty slots are exhausted — the pull fills the
+     * inventory first and only then swaps away listed trash, never a kept item.
      *
      * <p>Each step is a single {@link ServerboundContainerClickPacket} gated by
      * {@link #clickQueueBusy}. The ack is the server's {@code stateId} advancing past the click
